@@ -93,23 +93,6 @@ long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
     return totalSize;
 }
 
-template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent){
-
-	*strm << indent << "\"" << a->name() + "\": ";
-    int numDim = a->dimensions(true);
-    vector<unsigned int> shape(numDim);
-    long length = computeConstrainedShape(a, &shape);
-
-    T *src = new T[length];
-    a->value(src);
-    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-
-    if(length != indx)
-		BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
-
-    delete src;
-}
-
 template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
 
 	*strm << "[";
@@ -137,6 +120,25 @@ template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, 
 
 	return indx;
 }
+
+
+template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent){
+
+	*strm << indent << "\"" << a->name() + "\": ";
+    int numDim = a->dimensions(true);
+    vector<unsigned int> shape(numDim);
+    long length = computeConstrainedShape(a, &shape);
+
+    T *src = new T[length];
+    a->value(src);
+    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+
+    if(length != indx)
+		BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+
+    delete src;
+}
+
 
 /** @brief Constructor that creates transformation object from the specified
  * DataDDS object to the specified file
@@ -383,6 +385,20 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 		break;
 
 	}
+
+	case dods_int8_c:
+	case dods_uint8_c:
+	case dods_int64_c:
+	case dods_uint64_c:
+	case dods_url4_c:
+	case dods_enum_c:
+	case dods_group_c:
+	{
+		string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
+        throw BESInternalError(s, __FILE__, __LINE__);
+		break;
+	}
+
 }
 
 
