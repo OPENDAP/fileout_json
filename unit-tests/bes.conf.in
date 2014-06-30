@@ -1,0 +1,6 @@
+FOJSON.Tempdir=@abs_builddir@/tmp
+
+# Where we log the stuff...
+BES.LogName=./bes.log
+BES.LogVerbose=yes
+
