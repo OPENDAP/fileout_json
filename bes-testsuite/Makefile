@@ -425,7 +425,7 @@ bes.conf: bes.conf.in ../config.status
 		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
 		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
 
-check-local: atconfig atlocal $(TESTSUITE)
+check-local: atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
 clean-local:

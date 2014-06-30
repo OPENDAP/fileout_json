@@ -38,7 +38,7 @@ AUTOM4TE = autom4te
  
 TESTSUITE = $(srcdir)/fileout_jsonTest
 
-check-local: atconfig atlocal $(TESTSUITE)
+check-local: atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
 clean-local:
