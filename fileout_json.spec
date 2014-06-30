@@ -1,24 +1,22 @@
-Summary: Return a NetCDF File for a DAP Data response
-Name: fileout_netcdf
-Version: 1.2.1
+Summary: Return a JSON File for a DAP Data response
+Name: fileout_json
+Version: 0.0.1
 Release: 1
 License: LGPLv2+
 Group: System Environment/Daemons
 URL: http://www.opendap.org/
 Source0: http://www.opendap.org/pub/source/%{name}-%{version}.tar.gz
-Requires: libdap >= 3.12.1
-Requires: netcdf >= 3.6
-Requires: bes >= 3.9.0
+Requires: libdap >= 3.13.0
+Requires: bes >= 3.13.0
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:   libdap-devel >= 3.12.1
-BuildRequires:   netcdf-devel >= 3.6
-BuildRequires:   bes-devel >= 3.9.0
+BuildRequires:   libdap-devel >= 3.13.1
+BuildRequires:   bes-devel >= 3.13.0
 
 %description
-This is the fileout netCDF response handler for Hyrax - the OPeNDAP data
+This is the fileout JSON response handler for Hyrax - the OPeNDAP data
 server. With this handler a server can easily be configured to return
-data packaged in a netCDF 3 file.
+data packaged in JSON file.
 
 %prep
 %setup -q
@@ -48,13 +46,4 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/bes/libfonc_module.so
 %doc COPYING COPYRIGHT NEWS README
 
-%changelog
-* Sat May  1 2010 Patrick West <westp@rpi.edu> - 1.0.1-1
-- Update to 1.0.1
-
-* Tue Feb  2 2010 Patrick West <westp@rpi.edu> - 1.0.0-1
-- Update to 1.0.0
-
-* Mon Mar 16 2009 James Gallagher <jgallagher@opendap.org> - 
-- Initial build.
 
