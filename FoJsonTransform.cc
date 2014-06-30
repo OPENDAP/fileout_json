@@ -384,7 +384,6 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 		transform(strm, (Array *) bt, indent);
 		break;
 
-	}
 
 	case dods_int8_c:
 	case dods_uint8_c:
@@ -397,6 +396,15 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 		string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
+	}
+
+	default:
+	{
+		string s = (string) "File out JSON, " + "Unrecognized type.";
+        throw BESInternalError(s, __FILE__, __LINE__);
+		break;
+	}
+
 	}
 
 }
