@@ -68,8 +68,8 @@ BES.modules=dap,cmd,dapreader,json,nc
 BES.module.dap=@modulesdir@/libdap_module.so
 BES.module.cmd=@modulesdir@/libdap_xml_module.so
 BES.module.dapreader=@modulesdir@/libdapreader_module.so
-BES.module.nc=@modulesdir@/libnc_module.so
 BES.module.json=@abs_top_builddir@/.libs/libfojson_module.so
+BES.module.nc=@modulesdir@/libnc_module.so
 
 #-----------------------------------------------------------------------#
 # Setting the data location

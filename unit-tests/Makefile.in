@@ -42,7 +42,7 @@ check_PROGRAMS = $(am__EXEEXT_1)
 subdir = unit-tests
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/atlocal.in \
-	$(srcdir)/bes.conf.in $(srcdir)/test_config.h.in
+	$(srcdir)/test_config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/conf/bes.m4 \
 	$(top_srcdir)/conf/cppunit.m4 $(top_srcdir)/conf/libdap.m4 \
@@ -54,7 +54,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = bes.conf test_config.h atlocal
+CONFIG_CLEAN_FILES = test_config.h atlocal
 CONFIG_CLEAN_VPATH_FILES =
 am__EXEEXT_1 = FoJsonTest$(EXEEXT)
 am__objects_1 = FoJsonTransform.$(OBJEXT)
@@ -291,8 +291,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-bes.conf: $(top_builddir)/config.status $(srcdir)/bes.conf.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 test_config.h: $(top_builddir)/config.status $(srcdir)/test_config.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 atlocal: $(top_builddir)/config.status $(srcdir)/atlocal.in
