@@ -78,5 +78,6 @@ AC_SUBST(NC_BIN_PATH, $NC_BIN)
 
 AC_CONFIG_FILES([Makefile unit-tests/Makefile unit-tests/test_config.h unit-tests/atlocal bes-testsuite/Makefile bes-testsuite/atlocal] )
 AC_CONFIG_TESTDIR(unit-tests)
+AC_CONFIG_TESTDIR(bes-testsuite)
 
 AC_OUTPUT
