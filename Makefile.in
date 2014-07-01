@@ -87,7 +87,8 @@ am__DEPENDENCIES_1 =
 libfojson_module_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libfojson_module_la-FoJsonTransform.lo \
 	libfojson_module_la-FoJsonTransmitter.lo \
-	libfojson_module_la-FoJsonRequestHandler.lo
+	libfojson_module_la-FoJsonRequestHandler.lo \
+	libfojson_module_la-FoJsonModule.lo
 am__objects_2 =
 am_libfojson_module_la_OBJECTS = $(am__objects_1) $(am__objects_2)
 libfojson_module_la_OBJECTS = $(am_libfojson_module_la_OBJECTS)
@@ -326,12 +327,12 @@ libfojson_module_la_SOURCES = $(FOJSON_SRC) $(FOJSON_HDR)
 libfojson_module_la_CPPFLAGS = $(BES_CPPFLAGS)
 libfojson_module_la_LDFLAGS = -avoid-version -module 
 libfojson_module_la_LIBADD = $(BES_DAP_LIBS)
-FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc	
+FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc	
 #	FoJsonModule.cc FoJsonUtils.cc FoJsonStr.cc FoJsonShort.cc FoJsonInt.cc	\
 #	FoJsonFloat.cc FoJsonDouble.cc FoJsonStructure.cc FoJsonArray.cc	\
 #	FoJsonGrid.cc FoJsonSequence.cc FoJsonByte.cc FoJsonBaseType.cc		\
 #	FoJsonDim.cc FoJsonMap.cc FoJsonAttributes.cc
-FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h	
+FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h
 #	FoJsonModule.h FoJsonUtils.h FoJsonStr.h FoJsonShort.h FoJsonInt.h	\
 #	FoJsonFloat.h FoJsonDouble.h FoJsonStructure.h FoJsonArray.h		\
 #	FoJsonGrid.h FoJsonSequence.h FoJsonByte.h FoJsonBaseType.h		\
@@ -447,6 +448,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfojson_module_la-FoJsonModule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfojson_module_la-FoJsonRequestHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfojson_module_la-FoJsonTransform.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfojson_module_la-FoJsonTransmitter.Plo@am__quote@
@@ -492,6 +494,13 @@ libfojson_module_la-FoJsonRequestHandler.lo: FoJsonRequestHandler.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='FoJsonRequestHandler.cc' object='libfojson_module_la-FoJsonRequestHandler.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libfojson_module_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libfojson_module_la-FoJsonRequestHandler.lo `test -f 'FoJsonRequestHandler.cc' || echo '$(srcdir)/'`FoJsonRequestHandler.cc
+
+libfojson_module_la-FoJsonModule.lo: FoJsonModule.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libfojson_module_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libfojson_module_la-FoJsonModule.lo -MD -MP -MF $(DEPDIR)/libfojson_module_la-FoJsonModule.Tpo -c -o libfojson_module_la-FoJsonModule.lo `test -f 'FoJsonModule.cc' || echo '$(srcdir)/'`FoJsonModule.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libfojson_module_la-FoJsonModule.Tpo $(DEPDIR)/libfojson_module_la-FoJsonModule.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='FoJsonModule.cc' object='libfojson_module_la-FoJsonModule.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libfojson_module_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libfojson_module_la-FoJsonModule.lo `test -f 'FoJsonModule.cc' || echo '$(srcdir)/'`FoJsonModule.cc
 
 mostlyclean-libtool:
 	-rm -f *.lo
