@@ -64,9 +64,10 @@ private:
 	string _returnAs;
 	string _indent_increment;
 
+	void transformAtomic(ostream *strm, BaseType *bt, string indent);
+
 	void transform(ostream *strm, DDS *dds, string indent);
 	void transform(ostream *strm, BaseType *bt, string indent);
-	void transformAtomic(ostream *strm, BaseType *bt, string indent);
     void transform(ostream *strm, Structure *s,string indent );
     void transform(ostream *strm, Grid *g, string indent);
     void transform(ostream *strm, Sequence *s, string indent);

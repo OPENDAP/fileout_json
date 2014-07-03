@@ -47,6 +47,9 @@ using std::istringstream;
 #include <Array.h>
 #include <Grid.h>
 #include <Sequence.h>
+#include <Str.h>
+#include <Url.h>
+
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
@@ -200,106 +203,6 @@ void FoJsonTransform::dump(ostream &strm) const
 
 
 
-#if 0
-/** @brief Transforms each of the variables of the DataDDS to the NetCDF
- * file
- *
- * For each variable in the DataDDS write out that variable and its
- * attributes to the netcdf file. Each OPeNDAP data type translates into a
- * particular netcdf type. Also write out any global variables stored at the
- * top level of the DataDDS.
- */
-void FoJsonTransform::transform_OLD()
-{
-    FoJsonUtils::reset();
-
-    // Convert the DDS into an internal format to keep track of
-    // variables, arrays, shared dimensions, grids, common maps,
-    // embedded structures. It only grabs the variables that are to be
-    // sent.
-    DDS::Vars_iter vi = _dds->var_begin();
-    DDS::Vars_iter ve = _dds->var_end();
-    for (; vi != ve; vi++) {
-        if ((*vi)->send_p()) {
-            BaseType *v = *vi;
-            BESDEBUG("fojson", "converting " << v->name() << endl);
-            FoJsonBaseType *fb = FoJsonUtils::convert(v);
-            fb->setVersion( FoJsonTransform::_returnAs );
-            _fonc_vars.push_back(fb);
-            vector<string> embed;
-            fb->convert(embed);
-        }
-    }
-    BESDEBUG("fojson", *this << endl);
-
-    // Open the file for writing
-    int stax;
-
-#if 0
-    if ( FoJsonTransform::_returnAs == RETURNAS_NETCDF4 ) {
-    	stax = nc_create(_localfile.c_str(), NC_CLOBBER|NC_NETCDF4|NC_CLASSIC_MODEL, &_ncid);
-    }
-    else {
-    	stax = nc_create(_localfile.c_str(), NC_CLOBBER, &_ncid);
-    }
-#endif
-
-	stax = nc_create(_localfile.c_str(), NC_CLOBBER, &_ncid);
-
-    if (stax != NC_NOERR) {
-        string err = (string) "File out netcdf, " + "unable to open file " + _localfile;
-        FoJsonUtils::handle_error(stax, err, __FILE__, __LINE__);
-    }
-
-    try {
-        // Here we will be defining the variables of the netcdf and
-        // adding attributes. To do this we must be in define mode.
-        nc_redef(_ncid);
-
-        // For each conerted FoJson object, call define on it to define
-        // that object to the netcdf file. This also adds the attributes
-        // for the variables to the netcdf file
-        vector<FoJsonBaseType *>::iterator i = _fonc_vars.begin();
-        vector<FoJsonBaseType *>::iterator e = _fonc_vars.end();
-        for (; i != e; i++) {
-            FoJsonBaseType *fbt = *i;
-            fbt->define(_ncid);
-        }
-
-        // Add any global attributes to the netcdf file
-        AttrTable &globals = _dds->get_attr_table();
-        BESDEBUG("fojson", "Adding Global Attributes" << endl << globals << endl);
-        FoJsonAttributes::addattrs(_ncid, NC_GLOBAL, globals, "", "");
-
-        // We are done defining the variables, dimensions, and
-        // attributes of the netcdf file. End the define mode.
-        int stax = nc_enddef(_ncid);
-
-        // Check error for nc_enddef. Handling of HDF failures
-        // can be detected here rather than later.  KY 2012-10-25
-        if (stax != NC_NOERR) {
-            string err = (string) "File out netcdf, " + "unable to end the define mode " + _localfile;
-            FoJsonUtils::handle_error(stax, err, __FILE__, __LINE__);
-        }
-
-        // Write everything out
-        i = _fonc_vars.begin();
-        e = _fonc_vars.end();
-        for (; i != e; i++) {
-            FoJsonBaseType *fbt = *i;
-            fbt->write(_ncid);
-        }
-    }
-    catch (BESError &e) {
-        nc_close(_ncid);
-        throw;
-    }
-
-    nc_close(_ncid);
-}
-#endif
-
-
 /** @brief Transforms each of the variables of the DataDDS to the NetCDF
  * file
  *
@@ -326,9 +229,13 @@ void FoJsonTransform::transform()
 
 }
 
+
+
+
 void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 
-	string s = "";
+
+	bool sentSomething = false;
 
 	*strm << "{" << endl << "\"" << dds->get_dataset_name() << "\": {" << endl;
     if(dds->num_var() > 0){
@@ -337,19 +244,22 @@ void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 		DDS::Vars_iter ve = dds->var_end();
 		for (; vi != ve; vi++) {
 			if ((*vi)->send_p()) {
+
 				BaseType *v = *vi;
 				BESDEBUG(FoJsonTransform_debug_key, "Processing top level variable: " << v->name() << endl);
-				transform(strm, v, indent + _indent_increment);
-				if( (vi+1) != ve ){
-					*strm << "," ;
-				}
-				*strm << endl ;
 
+				if( sentSomething ){
+					*strm << "," ;
+					*strm << endl ;
+				}
+				transform(strm, v, indent + _indent_increment);
+
+				sentSomething = true;
 			}
 
 		}
     }
-    *strm <<  s <<  "}" << endl << "}" << endl;
+    *strm <<  endl <<  "}" << endl << "}" << endl;
 
 }
 
@@ -518,6 +428,10 @@ void FoJsonTransform::transform(ostream *strm, Sequence *s, string indent){
 
 void FoJsonTransform::transform(ostream *strm, Array *a, string indent){
 
+    BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
+            << " a->type(): " << a->type()
+			<< " a->var()->type(): " << a->var()->type()
+			<< endl);
 
 	switch(a->var()->type()){
 	// Handle the atomic types - that's easy!
@@ -547,6 +461,14 @@ void FoJsonTransform::transform(ostream *strm, Array *a, string indent){
 
 	case dods_float64_c:
 		json_simple_type_array<dods_float64>(strm,a,indent);
+		break;
+
+	case dods_str_c:
+		//json_simple_type_array<Str>(strm,a,indent);
+		break;
+
+	case dods_url_c:
+		//json_simple_type_array<Url>(strm,a,indent);
 		break;
 
 	case dods_structure_c:
