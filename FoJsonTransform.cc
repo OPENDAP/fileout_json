@@ -275,6 +275,7 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 	case dods_float32_c:
 	case dods_float64_c:
 	case dods_str_c:
+	case dods_url_c:
 		transformAtomic(strm, bt, indent);
 		break;
 
