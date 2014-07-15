@@ -73,6 +73,7 @@ private:
     void transform(ostream *strm, Sequence *s, string indent);
 
     void transform(ostream *strm, Array *a, string indent);
+	void transform(ostream *strm, AttrTable *at, string indent);
 
 public:
 	/**
