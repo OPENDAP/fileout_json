@@ -19,13 +19,13 @@ libfojson_module_la_CPPFLAGS = $(BES_CPPFLAGS)
 libfojson_module_la_LDFLAGS = -avoid-version -module 
 libfojson_module_la_LIBADD = $(BES_DAP_LIBS)
 
-FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc StreamString.cc
+FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc FoW10nJsonTransform.cc StreamString.cc
 #	FoJsonModule.cc FoJsonUtils.cc FoJsonStr.cc FoJsonShort.cc FoJsonInt.cc	\
 #	FoJsonFloat.cc FoJsonDouble.cc FoJsonStructure.cc FoJsonArray.cc	\
 #	FoJsonGrid.cc FoJsonSequence.cc FoJsonByte.cc FoJsonBaseType.cc		\
 #	FoJsonDim.cc FoJsonMap.cc FoJsonAttributes.cc
 
-FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h StreamString.h
+FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h FoW10nJsonTransform.h StreamString.h
 #	FoJsonModule.h FoJsonUtils.h FoJsonStr.h FoJsonShort.h FoJsonInt.h	\
 #	FoJsonFloat.h FoJsonDouble.h FoJsonStructure.h FoJsonArray.h		\
 #	FoJsonGrid.h FoJsonSequence.h FoJsonByte.h FoJsonBaseType.h		\

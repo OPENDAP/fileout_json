@@ -48,7 +48,6 @@ using namespace::libdap ;
 #include <BESObj.h>
 #include <BESDataHandlerInterface.h>
 
-class FoJsonBaseType ;
 
 /** @brief Transformation object that converts an OPeNDAP DataDDS to a
  * netcdf file

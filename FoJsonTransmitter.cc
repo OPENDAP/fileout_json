@@ -60,6 +60,8 @@
 #include "FoJsonTransmitter.h"
 #include "FoJsonTransform.h"
 
+#include "FoW10nJsonTransform.h"
+
 using namespace ::libdap;
 
 #define FO_JSON_TEMP_DIR "/tmp"
@@ -277,7 +279,8 @@ void FoJsonTransmitter::send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDa
 
 
 
-        FoJsonTransform ft(dds, dhi, temp_full);
+//        FoJsonTransform ft(dds, dhi, temp_full);
+        FoW10nJsonTransform ft(dds, dhi, temp_full);
         ft.transform();
 
         BESDEBUG("fojson", "FoJsonTransmitter::send_data - transmitting temp file " << temp_full << endl);

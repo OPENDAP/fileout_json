@@ -528,26 +528,27 @@ void FoJsonTransform::transform(ostream *strm, AttrTable *attr_table, string  in
 
 	for(AttrTable::Attr_iter at_iter=begin; at_iter < end; at_iter++){
 		switch ((*at_iter)->type){
-		case Attr_container:
-		{
-			transform(strm, (AttrTable*) *at_iter, indent + _indent_increment);
-			break;
+			case Attr_container:
+			{
+				transform(strm, (AttrTable*) *at_iter, indent + _indent_increment);
+				break;
 
-		}
-		default:
-		{
-			*strm << indent << (*at_iter)->name  << ": [";
-			vector<string> values = (*at_iter)->attr;
-			for(int i=0; i<values.size() ;i++){
-				if(i>0)
-					*strm << ",";
-
-				*strm << values[i] ;
 			}
-			*strm << "]";
-			break;
-		}
+			default:
+			{
+				*strm << indent << (*at_iter)->name  << ": [";
+				vector<string> *values = (*at_iter)->attr;
+				for(int i=0; i<values->size() ;i++){
+					if(i>0)
+						*strm << ",";
 
+					*strm << (*values)[i] ;
+				}
+				*strm << "]";
+				break;
+			}
+
+	    }
 	}
 
 

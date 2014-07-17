@@ -29,7 +29,7 @@ check_PROGRAMS = $(UNIT_TESTS)
 
 UNIT_TESTS = FoJsonTest
 
-SRCS = ../FoJsonTransform.cc
+SRCS = ../FoJsonTransform.cc ../FoW10nJsonTransform.cc
 
 
 FoJsonTest_SOURCES = FoJsonTest.cc $(SRCS)

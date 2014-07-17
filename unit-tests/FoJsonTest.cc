@@ -44,7 +44,8 @@
 #include "Grid.h"
 
 #include "test_config.h"
-#include "FoJsonTransform.h"
+// #include "FoJsonTransform.h"
+#include "FoW10nJsonTransform.h"
 
 #include "BESDebug.h"
 #include "debug.h"
@@ -147,7 +148,8 @@ public:
         	DBG(cerr << "FoJsonTest::test_DDS() - tmpFile: " << tmpFile << endl);
 
             BESDataHandlerInterface dhi;
-            FoJsonTransform ft(test_DDS, dhi, tmpFile );
+            // FoJsonTransform ft(test_DDS, dhi, tmpFile );
+            FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
 
         	DBG(cerr << "FoJsonTest::test_DDS() - Calling FoJsonTransform::transform()" << endl);
 

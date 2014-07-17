@@ -57,7 +57,8 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = test_config.h atlocal
 CONFIG_CLEAN_VPATH_FILES =
 am__EXEEXT_1 = FoJsonTest$(EXEEXT)
-am__objects_1 = FoJsonTransform.$(OBJEXT)
+am__objects_1 = FoJsonTransform.$(OBJEXT) \
+	FoW10nJsonTransform.$(OBJEXT)
 am_FoJsonTest_OBJECTS = FoJsonTest.$(OBJEXT) $(am__objects_1)
 FoJsonTest_OBJECTS = $(am_FoJsonTest_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -247,7 +248,7 @@ EXTRA_DIST = data baselines test_config.h.in bes.conf.in fonc_handlerTest.at $(T
 # Unit Tests
 #
 UNIT_TESTS = FoJsonTest
-SRCS = ../FoJsonTransform.cc
+SRCS = ../FoJsonTransform.cc ../FoW10nJsonTransform.cc
 FoJsonTest_SOURCES = FoJsonTest.cc $(SRCS)
 FoJsonTest_LDADD = $(AM_LDADD)
 noinst_HEADERS = test_config.h
@@ -316,6 +317,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FoJsonTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FoJsonTransform.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FoW10nJsonTransform.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -351,6 +353,20 @@ FoJsonTransform.obj: ../FoJsonTransform.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='../FoJsonTransform.cc' object='FoJsonTransform.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o FoJsonTransform.obj `if test -f '../FoJsonTransform.cc'; then $(CYGPATH_W) '../FoJsonTransform.cc'; else $(CYGPATH_W) '$(srcdir)/../FoJsonTransform.cc'; fi`
+
+FoW10nJsonTransform.o: ../FoW10nJsonTransform.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT FoW10nJsonTransform.o -MD -MP -MF $(DEPDIR)/FoW10nJsonTransform.Tpo -c -o FoW10nJsonTransform.o `test -f '../FoW10nJsonTransform.cc' || echo '$(srcdir)/'`../FoW10nJsonTransform.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/FoW10nJsonTransform.Tpo $(DEPDIR)/FoW10nJsonTransform.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='../FoW10nJsonTransform.cc' object='FoW10nJsonTransform.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o FoW10nJsonTransform.o `test -f '../FoW10nJsonTransform.cc' || echo '$(srcdir)/'`../FoW10nJsonTransform.cc
+
+FoW10nJsonTransform.obj: ../FoW10nJsonTransform.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT FoW10nJsonTransform.obj -MD -MP -MF $(DEPDIR)/FoW10nJsonTransform.Tpo -c -o FoW10nJsonTransform.obj `if test -f '../FoW10nJsonTransform.cc'; then $(CYGPATH_W) '../FoW10nJsonTransform.cc'; else $(CYGPATH_W) '$(srcdir)/../FoW10nJsonTransform.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/FoW10nJsonTransform.Tpo $(DEPDIR)/FoW10nJsonTransform.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='../FoW10nJsonTransform.cc' object='FoW10nJsonTransform.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o FoW10nJsonTransform.obj `if test -f '../FoW10nJsonTransform.cc'; then $(CYGPATH_W) '../FoW10nJsonTransform.cc'; else $(CYGPATH_W) '$(srcdir)/../FoW10nJsonTransform.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
