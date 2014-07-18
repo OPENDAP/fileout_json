@@ -81,7 +81,8 @@ string getW10nTypeString(BaseType *bt){
 	case dods_sequence_c:
 	case dods_array_c:
 	{
-		string s = (string) "File out JSON, W10N supports complex data types as nodes. The variable " + bt->type_name() +" " +bt->name() +" is a node type.";
+		string s = (string) "File out JSON, W10N supports complex data types as nodes. "
+				"The variable " + bt->type_name() +" " +bt->name() +" is a node type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
 	}
@@ -143,13 +144,14 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 
 
 
-template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *strm, Array *a, string indent){
+template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData){
+
 
 	*strm << indent << "{" << endl;\
 
 	string childindent = indent + _indent_increment;
 
-	writeLeafMetaData(strm,a,childindent);
+	writeLeafMetadata(strm,a,childindent);
 
 	int numDim = a->dimensions(true);
 	vector<unsigned int> shape(numDim);
@@ -162,27 +164,35 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 			*strm << ",";
 		*strm << shape[i];
 	}
-	*strm << "],"<< endl;
+	*strm << "]";
 
-	// Data
-	*strm << childindent << "\"data\": ";
+	if(sendData){
+		*strm << ","<< endl;
 
-    T *src = new T[length];
-    a->value(src);
-    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+		// Data
+		*strm << childindent << "\"data\": ";
 
-    if(length != indx)
-		BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+	    T *src = new T[length];
+	    a->value(src);
+
+	    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+
+	    delete src;
+
+	    if(length != indx)
+			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+
+
+	}
 
 	*strm << endl << indent << "}";
 
-    delete src;
 }
 
 
 
 
-void FoW10nJsonTransform::writeLeafMetaData(ostream *strm, BaseType *bt, string indent){
+void FoW10nJsonTransform::writeLeafMetadata(ostream *strm, BaseType *bt, string indent){
 
 	// Name
 	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
@@ -222,7 +232,7 @@ void FoW10nJsonTransform::writeLeafMetaData(ostream *strm, BaseType *bt, string 
  */
 FoW10nJsonTransform::FoW10nJsonTransform(DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
         _dds(0),
-        _indent_increment(" ")
+        _indent_increment("  ")
 {
     if (!dds) {
         string s = (string) "File out JSON, " + "null DDS passed to constructor";
@@ -276,7 +286,7 @@ void FoW10nJsonTransform::dump(ostream &strm) const
  * particular netcdf type. Also write out any global variables stored at the
  * top level of the DataDDS.
  */
-void FoW10nJsonTransform::transform()
+void FoW10nJsonTransform::transform(bool sendData)
 {
     // FoJsonUtils::reset();
 
@@ -284,7 +294,7 @@ void FoW10nJsonTransform::transform()
     fileStrm.open (_localfile.c_str());
 
     try {
-        transform( &fileStrm, _dds,"");
+        transform( &fileStrm, _dds,"", sendData);
     }
     catch (BESError &e) {
     	fileStrm.close();
@@ -299,7 +309,7 @@ void FoW10nJsonTransform::transform()
  * DAP Constructor types are semantically equivalent to a w10n node type so they
  * must be represented as a collection of child nodes and leaves.
  */
-void FoW10nJsonTransform::transform(ostream *strm, Constructor *cnstrctr, string indent){
+void FoW10nJsonTransform::transform(ostream *strm, Constructor *cnstrctr, string indent, bool sendData){
 	vector<BaseType *> leaves;
 	vector<BaseType *> nodes;
 
@@ -330,15 +340,15 @@ void FoW10nJsonTransform::transform(ostream *strm, Constructor *cnstrctr, string
 	string child_indent = indent + _indent_increment;
 
 	// Write this node's metadata (name & attributes)
-	writeNodeMetaData(strm, cnstrctr, child_indent);
+	writeNodeMetadata(strm, cnstrctr, child_indent);
 
-	transform_node_worker(strm, leaves,  nodes, child_indent);
+	transform_node_worker(strm, leaves,  nodes, child_indent, sendData);
 
 	*strm << indent << "}" << endl;
 
 }
 
-void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<BaseType *> leaves, vector<BaseType *> nodes, string indent){
+void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<BaseType *> leaves, vector<BaseType *> nodes, string indent, bool sendData){
 	// Write down this nodes leaves
 	*strm << indent << "\"leaves\": [";
 	if(leaves.size() > 0)
@@ -350,7 +360,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<BaseType *
 			*strm << "," ;
 			*strm << endl ;
 		}
-		transform(strm, v, indent + _indent_increment);
+		transform(strm, v, indent + _indent_increment, sendData);
 	}
 	if(leaves.size()>0)
 		*strm << endl << indent;
@@ -363,7 +373,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<BaseType *
 		*strm << endl;
 	for(int n=0; n< nodes.size(); n++){
 		BaseType *v = nodes[n];
-		transform(strm, v, indent + _indent_increment);
+		transform(strm, v, indent + _indent_increment, sendData);
 	}
 	if(nodes.size()>0)
 		*strm << endl << indent;
@@ -375,7 +385,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<BaseType *
 
 
 
-void FoW10nJsonTransform::transform(ostream *strm, DDS *dds, string indent){
+void FoW10nJsonTransform::transform(ostream *strm, DDS *dds, string indent, bool sendData){
 
 
 
@@ -408,7 +418,7 @@ void FoW10nJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 	// Write this node's metadata (name & attributes)
 	writeDatasetMetadata(strm, dds, child_indent);
 
-	transform_node_worker(strm, leaves,  nodes, child_indent);
+	transform_node_worker(strm, leaves,  nodes, child_indent, sendData);
 
 	*strm << indent << "}" << endl;
 
@@ -416,7 +426,7 @@ void FoW10nJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 
 
 
-void FoW10nJsonTransform::writeNodeMetaData(ostream *strm, BaseType *bt, string indent){
+void FoW10nJsonTransform::writeNodeMetadata(ostream *strm, BaseType *bt, string indent){
 
 	// Name
 	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
@@ -428,8 +438,6 @@ void FoW10nJsonTransform::writeNodeMetaData(ostream *strm, BaseType *bt, string 
 
 
 }
-
-
 
 
 void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, DDS *dds, string indent){
@@ -444,7 +452,7 @@ void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, DDS *dds, string i
 }
 
 
-void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
+void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent, bool sendData)
 {
 	switch(bt->type()){
 	// Handle the atomic types - that's easy!
@@ -457,25 +465,24 @@ void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 	case dods_float64_c:
 	case dods_str_c:
 	case dods_url_c:
-		transformAtomic(strm, bt, indent);
+		transformAtomic(strm, bt, indent, sendData);
 		break;
 
 	case dods_structure_c:
-		transform(strm, (Structure *) bt, indent);
+		transform(strm, (Structure *) bt, indent, sendData);
 		break;
 
 	case dods_grid_c:
-		transform(strm, (Grid *) bt, indent);
+		transform(strm, (Grid *) bt, indent, sendData);
 		break;
 
 	case dods_sequence_c:
-		transform(strm, (Sequence *) bt, indent);
+		transform(strm, (Sequence *) bt, indent, sendData);
 		break;
 
 	case dods_array_c:
-		transform(strm, (Array *) bt, indent);
+		transform(strm, (Array *) bt, indent, sendData);
 		break;
-
 
 	case dods_int8_c:
 	case dods_uint8_c:
@@ -502,28 +509,30 @@ void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 }
 
 
-void FoW10nJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent){
+void FoW10nJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent, bool sendData){
 
 	*strm << indent << "{" << endl;
 
 	string childindent = indent + _indent_increment;
 
-	writeLeafMetaData(strm,b,childindent);
+	writeLeafMetadata(strm, b, childindent);
 
 	*strm << childindent << "\"shape\": [1]," << endl;
 
-	// Data
-	*strm << childindent << "\"data\": [";
+	if(sendData){
+		// Data
+		*strm << childindent << "\"data\": [";
 
-	b->print_val(*strm, "", false);
+		b->print_val(*strm, "", false);
 
-	*strm << childindent << "]";
+		*strm << "]";
+	}
 
 }
 
 
 
-void FoW10nJsonTransform::transform(ostream *strm, Array *a, string indent){
+void FoW10nJsonTransform::transform(ostream *strm, Array *a, string indent, bool sendData){
 
     BESDEBUG(FoW10nJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
             << " a->type(): " << a->type()
@@ -533,31 +542,31 @@ void FoW10nJsonTransform::transform(ostream *strm, Array *a, string indent){
 	switch(a->var()->type()){
 	// Handle the atomic types - that's easy!
 	case dods_byte_c:
-		json_simple_type_array<dods_byte>(strm,a,indent);
+		json_simple_type_array<dods_byte>(strm,a,indent,sendData);
 		break;
 
 	case dods_int16_c:
-		json_simple_type_array<dods_int16>(strm,a,indent);
+		json_simple_type_array<dods_int16>(strm,a,indent,sendData);
 		break;
 
 	case dods_uint16_c:
-		json_simple_type_array<dods_uint16>(strm,a,indent);
+		json_simple_type_array<dods_uint16>(strm,a,indent,sendData);
 		break;
 
 	case dods_int32_c:
-		json_simple_type_array<dods_int32>(strm,a,indent);
+		json_simple_type_array<dods_int32>(strm,a,indent,sendData);
 		break;
 
 	case dods_uint32_c:
-		json_simple_type_array<dods_uint32>(strm,a,indent);
+		json_simple_type_array<dods_uint32>(strm,a,indent,sendData);
 		break;
 
 	case dods_float32_c:
-		json_simple_type_array<dods_float32>(strm,a,indent);
+		json_simple_type_array<dods_float32>(strm,a,indent,sendData);
     	break;
 
 	case dods_float64_c:
-		json_simple_type_array<dods_float64>(strm,a,indent);
+		json_simple_type_array<dods_float64>(strm,a,indent,sendData);
 		break;
 
 	case dods_str_c:

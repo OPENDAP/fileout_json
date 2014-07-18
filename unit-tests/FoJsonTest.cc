@@ -153,7 +153,7 @@ public:
 
         	DBG(cerr << "FoJsonTest::test_DDS() - Calling FoJsonTransform::transform()" << endl);
 
-            ft.transform();
+            ft.transform(true);
 
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/test_DDS.json.baseline");

@@ -65,7 +65,8 @@ public:
     }
 
     static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    static void send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi);
+    static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
+    static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 
 };
 

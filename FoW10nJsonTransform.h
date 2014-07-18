@@ -33,28 +33,28 @@ private:
 	string _indent_increment;
 
 
-	void writeNodeMetaData(ostream *strm, BaseType *bt, string indent);
-	void writeLeafMetaData(ostream *strm, BaseType *bt, string indent);
+	void writeNodeMetadata(ostream *strm, BaseType *bt, string indent);
+	void writeLeafMetadata(ostream *strm, BaseType *bt, string indent);
 	void writeDatasetMetadata(ostream *strm, DDS *dds, string indent);
 
-	void transformAtomic(ostream *strm, BaseType *bt, string indent);
+	void transformAtomic(ostream *strm, BaseType *bt, string indent, bool sendData);
 
 
-	void transform(ostream *strm, DDS *dds, string indent);
-	void transform(ostream *strm, BaseType *bt, string indent);
+	void transform(ostream *strm, DDS *dds, string indent, bool sendData);
+	void transform(ostream *strm, BaseType *bt, string indent, bool sendData);
 
     //void transform(ostream *strm, Structure *s,string indent );
     //void transform(ostream *strm, Grid *g, string indent);
     //void transform(ostream *strm, Sequence *s, string indent);
-	void transform(ostream *strm, Constructor *cnstrctr, string indent);
-	void transform_node_worker(ostream *strm, vector<BaseType *> leaves, vector<BaseType *> nodes, string indent);
+	void transform(ostream *strm, Constructor *cnstrctr, string indent, bool sendData);
+	void transform_node_worker(ostream *strm, vector<BaseType *> leaves, vector<BaseType *> nodes, string indent, bool sendData);
 
 
-    void transform(ostream *strm, Array *a, string indent);
+    void transform(ostream *strm, Array *a, string indent, bool sendData);
     void transform(ostream *strm, AttrTable &attr_table, string  indent);
 
     template<typename T>
-    void json_simple_type_array(ostream *strm, Array *a, string indent);
+    void json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData);
 
     template<typename T>
     unsigned  int json_simple_type_array_worker(
@@ -80,7 +80,7 @@ public:
 	 */
     FoW10nJsonTransform(DDS *dds, BESDataHandlerInterface &dhi, const string &localfile);
 	virtual ~FoW10nJsonTransform();
-	virtual void transform();
+	virtual void transform(bool sendData);
 
 	virtual void dump(ostream &strm) const;
 

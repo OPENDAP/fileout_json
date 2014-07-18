@@ -53,6 +53,7 @@
 #include <TheBESKeys.h>
 #include <BESContextManager.h>
 #include <BESDataDDSResponse.h>
+#include <BESDDSResponse.h>
 #include <BESDapNames.h>
 #include <BESDataNames.h>
 #include <BESDebug.h>
@@ -85,6 +86,7 @@ FoJsonTransmitter::FoJsonTransmitter() :
 		BESBasicTransmitter()
 {
     add_method(DATA_SERVICE, FoJsonTransmitter::send_data);
+    add_method(DDX_SERVICE,  FoJsonTransmitter::send_metadata);
 
     if (FoJsonTransmitter::temp_dir.empty()) {
         // Where is the temp directory for creating these files
@@ -134,16 +136,52 @@ void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterfac
 
     ConstraintEvaluator &eval = bdds->get_ce();
 
-    send_data(dds, eval, dhi);
+    send_json(dds, eval, dhi, true);
+}
+
+/** @brief The static method registered to transmit OPeNDAP data objects as
+ * a netcdf file.
+ *
+ * This function takes the OPeNDAP DataDDS object, reads in the data (can be
+ * used with any data handler), transforms the data into a netcdf file, and
+ * streams back that netcdf file back to the requester using the stream
+ * specified in the BESDataHandlerInterface.
+ *
+ * @param obj The BESResponseObject containing the OPeNDAP DataDDS object
+ * @param dhi BESDataHandlerInterface containing information about the
+ * request and response
+ * @throws BESInternalError if the response is not an OPeNDAP DataDDS or if
+ * there are any problems reading the data, writing to a netcdf file, or
+ * streaming the netcdf file
+ */
+void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
+{
+    BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
+    if (!bdds) {
+        throw BESInternalError("Cast to BESDDSResponse error.", __FILE__, __LINE__);
+    }
+
+    DDS *dds = bdds->get_dds();
+    if (!dds) {
+        string err = (string) "No DataDDS has been created for transmit";
+        BESDEBUG("fojson", "send_metadata() - ERROR: "<< err << endl);
+        BESInternalError pe(err, __FILE__, __LINE__);
+        throw pe;
+    }
+
+    BESDEBUG("fojson", "FoJsonTransmitter::send_metadata - parsing the constraint" << endl);
+
+    ConstraintEvaluator &eval = bdds->get_ce();
+
+    send_json(dds, eval, dhi, false);
 }
 
 /** @brief version of the send_data() method that takes only libdap/STL objects.
  *
  * @note Used for unit tests.
  */
-void FoJsonTransmitter::send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi)
+void FoJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData)
 {
-
     string ncVersion = dhi.data[RETURN_CMD] ;
 
     ostream &o_strm = dhi.get_output_stream();
@@ -280,8 +318,13 @@ void FoJsonTransmitter::send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDa
 
 
 //        FoJsonTransform ft(dds, dhi, temp_full);
+        BESDEBUG("fojson", "FoJsonTransmitter::send_data - Building JSON Transformer. " << endl);
         FoW10nJsonTransform ft(dds, dhi, temp_full);
-        ft.transform();
+
+
+        BESDEBUG("fojson", "FoJsonTransmitter::send_data - Transforming. sendData: "<< sendData << endl);
+
+        ft.transform( sendData );
 
         BESDEBUG("fojson", "FoJsonTransmitter::send_data - transmitting temp file " << temp_full << endl);
         FoJsonTransmitter::return_temp_stream(temp_full, o_strm, ncVersion);
@@ -305,7 +348,7 @@ void FoJsonTransmitter::send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDa
         if (functional_constraint)
         delete dds;
 #endif
-        string err = (string) "File out netcdf, " + "was not able to transform to netcdf, unknown error";
+        string err = (string) "fileout_json: Failed to transform to JSON, unknown error";
         throw BESInternalError(err, __FILE__, __LINE__);
     }
 
@@ -316,7 +359,7 @@ void FoJsonTransmitter::send_data(DataDDS *dds, ConstraintEvaluator &eval, BESDa
     if (functional_constraint)
     delete dds;
 #endif
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - done transmitting to netcdf" << endl);
+    BESDEBUG("fojson", "FoJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
 /** @brief stream the temporary netcdf file back to the requester
