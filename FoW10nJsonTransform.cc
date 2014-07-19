@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <stddef.h>
+#include <string>
 
 using std::ostringstream;
 using std::istringstream;
@@ -34,6 +35,25 @@ using std::istringstream;
 
 
 #define FoW10nJsonTransform_debug_key "fojson"
+
+/**
+ * Replace every occurrence of 'char_to_escape' with the same preceded
+ * by the backslash '\' character.
+ */
+string backslash_escape(string source, char char_to_escape){
+	string escaped_result = source;
+	if(source.find(char_to_escape) >= 0 ){
+		size_t found = 0;
+		for(size_t i=0; i< source.length() ; i++){
+			if(source[i] == char_to_escape){
+				escaped_result.insert( i + found++, "\\");
+			}
+		}
+	}
+	return escaped_result;
+}
+
+
 
 
 long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape );
@@ -112,7 +132,10 @@ string getW10nTypeString(BaseType *bt){
 
 }
 
-
+/**
+ *  @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
+ *
+ */
 template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
 
 	*strm << "[";
@@ -134,7 +157,6 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 		    	*strm << ", ";
 	    	*strm << values[indx++];
 		}
-
     }
 	*strm << "]";
 
@@ -190,6 +212,32 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 }
 
 
+
+
+void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, DDS *dds, string indent){
+
+	// Name
+	*strm << indent << "\"name\": \""<< dds->get_dataset_name() << "\"," << endl;
+
+	//Attributes
+	transform(strm, dds->get_attr_table(), indent);
+	*strm << "," << endl;
+
+}
+
+
+void FoW10nJsonTransform::writeNodeMetadata(ostream *strm, BaseType *bt, string indent){
+
+	// Name
+	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
+
+	//Attributes
+	transform(strm, bt->get_attr_table(), indent);
+	*strm << "," << endl;
+
+
+
+}
 
 
 void FoW10nJsonTransform::writeLeafMetadata(ostream *strm, BaseType *bt, string indent){
@@ -426,32 +474,6 @@ void FoW10nJsonTransform::transform(ostream *strm, DDS *dds, string indent, bool
 
 
 
-void FoW10nJsonTransform::writeNodeMetadata(ostream *strm, BaseType *bt, string indent){
-
-	// Name
-	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
-
-	//Attributes
-	transform(strm, bt->get_attr_table(), indent);
-	*strm << "," << endl;
-
-
-
-}
-
-
-void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, DDS *dds, string indent){
-
-	// Name
-	*strm << indent << "\"name\": \""<< dds->get_dataset_name() << "\"," << endl;
-
-	//Attributes
-	transform(strm, dds->get_attr_table(), indent);
-	*strm << "," << endl;
-
-}
-
-
 void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent, bool sendData)
 {
 	switch(bt->type()){
@@ -508,7 +530,6 @@ void FoW10nJsonTransform::transform(ostream *strm, BaseType *bt, string  indent,
 
 }
 
-
 void FoW10nJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent, bool sendData){
 
 	*strm << indent << "{" << endl;
@@ -523,7 +544,15 @@ void FoW10nJsonTransform::transformAtomic(ostream *strm, BaseType *b, string ind
 		// Data
 		*strm << childindent << "\"data\": [";
 
-		b->print_val(*strm, "", false);
+		if(b->type() == dods_str_c || b->type() == dods_url_c ){
+			std::stringstream ss;
+			b->print_val(ss,"",false);
+			*strm << "\"" << backslash_escape(ss.str(), '"') << "\"";
+		}
+		else {
+			b->print_val(*strm, "", false);
+		}
+
 
 		*strm << "]";
 	}
@@ -571,6 +600,10 @@ void FoW10nJsonTransform::transform(ostream *strm, Array *a, string indent, bool
 
 	case dods_str_c:
 	{
+		// @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
+		//json_simple_type_array<string>(strm,a,indent,sendData);
+		//break;
+
 		string s = (string) "File out JSON, " + "Arrays of String objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
@@ -578,6 +611,10 @@ void FoW10nJsonTransform::transform(ostream *strm, Array *a, string indent, bool
 
 	case dods_url_c:
 	{
+		// @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
+		//json_simple_type_array<string>(strm,a,indent,sendData);
+		//break;
+
 		string s = (string) "File out JSON, " + "Arrays of URL objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
@@ -659,8 +696,11 @@ void FoW10nJsonTransform::transform(ostream *strm, AttrTable &attr_table, string
 					if(at_iter != begin )
 						*strm << "," << endl;
 
+					*strm << child_indent << "{" << endl;
+
 					AttrTable *atbl = attr_table.get_attr_table(at_iter);
-					transform(strm, *atbl, child_indent);
+					transform(strm, *atbl, child_indent + _indent_increment);
+					*strm << endl << child_indent << "}";
 
 					break;
 
@@ -676,11 +716,16 @@ void FoW10nJsonTransform::transform(ostream *strm, AttrTable &attr_table, string
 					for(int i=0; i<values->size() ;i++){
 						if(i>0)
 							*strm << ",";
-						if(attr_table.get_attr_type(at_iter) == Attr_string || attr_table.get_attr_type(at_iter) == Attr_url)
+						if(attr_table.get_attr_type(at_iter) == Attr_string || attr_table.get_attr_type(at_iter) == Attr_url){
 							*strm << "\"";
-						*strm << (*values)[i] ;
-						if(attr_table.get_attr_type(at_iter) == Attr_string || attr_table.get_attr_type(at_iter) == Attr_url)
+
+							string value = (*values)[i] ;
+							*strm << backslash_escape(value, '"') ;
 							*strm << "\"";
+						}
+						else {
+							*strm << (*values)[i] ;
+						}
 
 					}
 					*strm << "]}";
