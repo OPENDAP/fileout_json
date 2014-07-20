@@ -678,8 +678,8 @@ void FoW10nJsonTransform::transform(ostream *strm, AttrTable &attr_table, string
 	*strm << indent << "\"attributes\": [";
 
 
-	if(attr_table.get_name().length()>0)
-		*strm  << endl << child_indent << "{\"name\": \"name\", \"value\": \"" << attr_table.get_name() << "\"},";
+//	if(attr_table.get_name().length()>0)
+//		*strm  << endl << child_indent << "{\"name\": \"name\", \"value\": \"" << attr_table.get_name() << "\"},";
 
 
 	if(attr_table.get_size() != 0) {
@@ -693,12 +693,17 @@ void FoW10nJsonTransform::transform(ostream *strm, AttrTable &attr_table, string
 			switch (attr_table.get_attr_type(at_iter)){
 				case Attr_container:
 				{
+					AttrTable *atbl = attr_table.get_attr_table(at_iter);
+
 					if(at_iter != begin )
 						*strm << "," << endl;
 
 					*strm << child_indent << "{" << endl;
 
-					AttrTable *atbl = attr_table.get_attr_table(at_iter);
+					if(atbl->get_name().length()>0)
+						*strm << child_indent + _indent_increment << "\"name\": \"" << atbl->get_name() << "\"," << endl;
+
+
 					transform(strm, *atbl, child_indent + _indent_increment);
 					*strm << endl << child_indent << "}";
 
