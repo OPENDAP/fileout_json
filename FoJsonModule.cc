@@ -1,8 +1,11 @@
+
+// -*- mode: c++; c-basic-offset:4 -*-
+
 // FoJsonModule.cc
 
 // This file is part of BES JSON File Out Module
 
-// Copyright (c) 2012 OPeNDAP, Inc.
+// Copyright (c) 2014 OPeNDAP, Inc.
 // Author: Nathan Potter <ndp@opendap.org>
 //
 // This library is free software; you can redistribute it and/or
@@ -19,8 +22,10 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
-// You can contact University Corporation for Atmospheric Research at
-// 3080 Center Green Drive, Boulder, CO 80301
+// You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
+// (c) COPYRIGHT URI/MIT 1995-1999
+// Please read the full copyright statement in the file COPYRIGHT_URI.
+//
 
 #include "config.h"
 
@@ -63,7 +68,21 @@ void FoJsonModule::initialize(const string &modname)
     BESRequestHandlerList::TheList()->add_handler(modname, handler);
 
     BESDEBUG( "fojson", "    adding " << RETURNAS_JSON << " transmitter" << endl );
-    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON, new FoJsonTransmitter());
+
+
+    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON,
+
+
+    		new FoJsonTransmitter(
+
+
+
+    				/*JSON TYPE (Object/abstract) PARAMETER HERE!!! */
+
+
+    		)
+
+    );
 
     BESDebug::Register("fojson");
     BESDEBUG( "fojson", "Done Initializing module " << modname << endl );
