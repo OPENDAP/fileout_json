@@ -61,16 +61,17 @@ private:
 	string _returnAs;
 	string _indent_increment;
 
-	void transformAtomic(ostream *strm, BaseType *bt, string indent);
+	void transformAtomic(ostream *strm, BaseType *bt, string indent, bool sendData);
 
-	void transform(ostream *strm, DDS *dds, string indent);
-	void transform(ostream *strm, BaseType *bt, string indent);
-    void transform(ostream *strm, Structure *s,string indent );
-    void transform(ostream *strm, Grid *g, string indent);
-    void transform(ostream *strm, Sequence *s, string indent);
+	void transform(ostream *strm, DDS *dds, string indent, bool sendData);
+	void transform(ostream *strm, BaseType *bt, string indent, bool sendData);
+    void transform(ostream *strm, Structure *s,string indent, bool sendData );
+    void transform(ostream *strm, Grid *g, string indent, bool sendData);
+    void transform(ostream *strm, Sequence *s, string indent, bool sendData);
 
-    void transform(ostream *strm, Array *a, string indent);
-	void transform(ostream *strm, AttrTable *at, string indent);
+    void transform(ostream *strm, Array *a, string indent, bool sendData);
+
+    void transform(ostream *strm, AttrTable &attr_table, string  indent);
 
 public:
 	/**
@@ -85,7 +86,7 @@ public:
 	 */
 	FoJsonTransform(DDS *dds, BESDataHandlerInterface &dhi, const string &localfile);
 	virtual ~FoJsonTransform();
-	virtual void transform();
+	virtual void transform(bool sendData);
 
 	virtual void dump(ostream &strm) const;
 

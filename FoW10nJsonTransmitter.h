@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoJsonTransmitter.h
+// FoW10JsonTransmitter.h
 //
 // This file is part of BES JSON File Out Module
 //
@@ -27,8 +27,8 @@
 //
 
 
-#ifndef A_FoJsonTransmitter_h
-#define A_FoJsonTransmitter_h 1
+#ifndef A_FoW10nJsonTransmitter_h
+#define A_FoW10nJsonTransmitter_h 1
 
 #include <DataDDS.h>
 #include <ConstraintEvaluator.h>
@@ -43,13 +43,13 @@ using namespace libdap;
 /** @brief BESTransmitter class named "json" that transmits an OPeNDAP
  * data object as a JSON file
  *
- * The FoJsonTransmitter transforms an OPeNDAP DataDDS object into a
+ * The FoW10JsonTransmitter transforms an OPeNDAP DataDDS object into a
  * JSON file and streams the new (temporary) JSON file back to the
  * client.
  *
  * @see BESBasicTransmitter
  */
-class FoJsonTransmitter: public BESBasicTransmitter {
+class FoW10nJsonTransmitter: public BESBasicTransmitter {
 private:
     static void return_temp_stream(const string &filename,
 				   ostream &strm,
@@ -58,10 +58,9 @@ private:
 
 
 
-
 public:
-    FoJsonTransmitter();
-    virtual ~FoJsonTransmitter()
+    FoW10nJsonTransmitter();
+    virtual ~FoW10nJsonTransmitter()
     {
     }
 
@@ -71,5 +70,5 @@ public:
 
 };
 
-#endif // A_FoJsonTransmitter_h
+#endif // A_FoW10nJsonTransmitter_h
 

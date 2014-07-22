@@ -34,6 +34,7 @@
 using std::endl;
 
 #include "FoJsonModule.h"
+#include "FoW10nJsonTransmitter.h"
 #include "FoJsonTransmitter.h"
 #include "FoJsonRequestHandler.h"
 #include "BESRequestHandlerList.h"
@@ -47,6 +48,7 @@ using std::endl;
 #include <BESDebug.h>
 
 #define RETURNAS_JSON "json"
+#define RETURNAS_IJSON "ijson"
 
 
 
@@ -67,22 +69,14 @@ void FoJsonModule::initialize(const string &modname)
     BESRequestHandler *handler = new FoJsonRequestHandler(modname);
     BESRequestHandlerList::TheList()->add_handler(modname, handler);
 
+
     BESDEBUG( "fojson", "    adding " << RETURNAS_JSON << " transmitter" << endl );
+    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON, new FoW10nJsonTransmitter());
 
 
-    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON,
+    BESDEBUG( "fojson", "    adding " << RETURNAS_IJSON << " transmitter" << endl );
+    BESReturnManager::TheManager()->add_transmitter(RETURNAS_IJSON, new FoJsonTransmitter());
 
-
-    		new FoJsonTransmitter(
-
-
-
-    				/*JSON TYPE (Object/abstract) PARAMETER HERE!!! */
-
-
-    		)
-
-    );
 
     BESDebug::Register("fojson");
     BESDEBUG( "fojson", "Done Initializing module " << modname << endl );

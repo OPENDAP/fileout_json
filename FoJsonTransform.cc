@@ -57,6 +57,23 @@ using std::istringstream;
 
 #define FoJsonTransform_debug_key "fojson"
 
+/**
+ * Replace every occurrence of 'char_to_escape' with the same preceded
+ * by the backslash '\' character.
+ */
+string backslash_escape(string source, char char_to_escape){
+	string escaped_result = source;
+	if(source.find(char_to_escape) >= 0 ){
+		size_t found = 0;
+		for(size_t i=0; i< source.length() ; i++){
+			if(source[i] == char_to_escape){
+				escaped_result.insert( i + found++, "\\");
+			}
+		}
+	}
+	return escaped_result;
+}
+
 
 long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
     BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - BEGIN. Array name: "<< a->name() << endl);
@@ -122,21 +139,28 @@ template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, 
 }
 
 
-template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent){
+template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData){
 
 	*strm << indent << "\"" << a->name() + "\": ";
     int numDim = a->dimensions(true);
     vector<unsigned int> shape(numDim);
     long length = computeConstrainedShape(a, &shape);
 
-    T *src = new T[length];
-    a->value(src);
-    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+	//Attributes
+	transform(strm, a->get_attr_table(), indent);
 
-    if(length != indx)
-		BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+	*strm << "," << endl;
 
-    delete src;
+    if(sendData){
+		T *src = new T[length];
+		a->value(src);
+		unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+
+		if(length != indx)
+			BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+		delete src;
+
+    }
 }
 
 
@@ -208,7 +232,7 @@ void FoJsonTransform::dump(ostream &strm) const
  * particular netcdf type. Also write out any global variables stored at the
  * top level of the DataDDS.
  */
-void FoJsonTransform::transform()
+void FoJsonTransform::transform(bool sendData)
 {
     // FoJsonUtils::reset();
 
@@ -216,7 +240,7 @@ void FoJsonTransform::transform()
     fileStrm.open (_localfile.c_str());
 
     try {
-        transform( &fileStrm, _dds,"");
+        transform( &fileStrm, _dds,"", sendData);
     }
     catch (BESError &e) {
     	fileStrm.close();
@@ -229,7 +253,7 @@ void FoJsonTransform::transform()
 
 
 
-void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent){
+void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent, bool sendData){
 
 
 	bool sentSomething = false;
@@ -249,7 +273,7 @@ void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 					*strm << "," ;
 					*strm << endl ;
 				}
-				transform(strm, v, indent + _indent_increment);
+				transform(strm, v, indent + _indent_increment, sendData);
 
 				sentSomething = true;
 			}
@@ -260,7 +284,7 @@ void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent){
 
 }
 
-void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
+void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent, bool sendData)
 {
 	switch(bt->type()){
 	// Handle the atomic types - that's easy!
@@ -273,23 +297,23 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 	case dods_float64_c:
 	case dods_str_c:
 	case dods_url_c:
-		transformAtomic(strm, bt, indent);
+		transformAtomic(strm, bt, indent, sendData);
 		break;
 
 	case dods_structure_c:
-		transform(strm, (Structure *) bt, indent);
+		transform(strm, (Structure *) bt, indent, sendData);
 		break;
 
 	case dods_grid_c:
-		transform(strm, (Grid *) bt, indent);
+		transform(strm, (Grid *) bt, indent, sendData);
 		break;
 
 	case dods_sequence_c:
-		transform(strm, (Sequence *) bt, indent);
+		transform(strm, (Sequence *) bt, indent, sendData);
 		break;
 
 	case dods_array_c:
-		transform(strm, (Array *) bt, indent);
+		transform(strm, (Array *) bt, indent, sendData);
 		break;
 
 
@@ -318,13 +342,13 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent)
 }
 
 
-void FoJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent){
+void FoJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent, bool sendData){
 	*strm << indent << "\"" << b->name() <<  "\": ";
 	b->print_val(*strm, "", false);
 }
 
 
-void FoJsonTransform::transform(ostream *strm, Structure *b, string indent){
+void FoJsonTransform::transform(ostream *strm, Structure *b, string indent, bool sendData){
 
 	*strm << indent << "\"" << b->name() << "\": {" << endl;
     if(b->width(true) > 0){
@@ -335,7 +359,7 @@ void FoJsonTransform::transform(ostream *strm, Structure *b, string indent){
 			if ((*vi)->send_p()) {
 				BaseType *v = *vi;
 				BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing structure variable: " << v->name() << endl);
-				transform(strm, v, indent + _indent_increment );
+				transform(strm, v, indent + _indent_increment, sendData );
 				if( (vi+1) != ve ){
 					*strm << "," ;
 				}
@@ -347,13 +371,13 @@ void FoJsonTransform::transform(ostream *strm, Structure *b, string indent){
 }
 
 
-void FoJsonTransform::transform(ostream *strm, Grid *g, string indent){
+void FoJsonTransform::transform(ostream *strm, Grid *g, string indent, bool sendData){
 
     *strm << indent << "\"" << g->name() << "\": {" << endl;
 
 	BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Grid data Array: " << g->get_array()->name() << endl);
 
-	transform(strm, g->get_array(), indent+_indent_increment);
+	transform(strm, g->get_array(), indent+_indent_increment, sendData);
     *strm << "," << endl;
 
 	for(Grid::Map_iter mapi=g->map_begin(); mapi < g->map_end(); mapi++){
@@ -361,13 +385,13 @@ void FoJsonTransform::transform(ostream *strm, Grid *g, string indent){
 		if(mapi != g->map_begin()){
 		    *strm << "," << endl;
 		}
-		transform(strm, *mapi, indent+_indent_increment);
+		transform(strm, *mapi, indent+_indent_increment, sendData);
 	}
     *strm << endl << indent << "}";
 
 }
 
-void FoJsonTransform::transform(ostream *strm, Sequence *s, string indent){
+void FoJsonTransform::transform(ostream *strm, Sequence *s, string indent, bool sendData){
 
 	*strm << indent << "\"" <<  s->name() << "\": {" << endl;
 
@@ -412,7 +436,7 @@ void FoJsonTransform::transform(ostream *strm, Sequence *s, string indent){
 		for(Constructor::Vars_iter v=s->var_begin(); v<s->var_end() ; v++){
 			if(v!=s->var_begin())
 				*strm << child_indent  <<",";
-			transform(strm, (*v),child_indent+_indent_increment);
+			transform(strm, (*v),child_indent+_indent_increment, sendData);
 		}
 		*strm << child_indent <<"]";
 		first = false;
@@ -424,7 +448,7 @@ void FoJsonTransform::transform(ostream *strm, Sequence *s, string indent){
 }
 
 
-void FoJsonTransform::transform(ostream *strm, Array *a, string indent){
+void FoJsonTransform::transform(ostream *strm, Array *a, string indent, bool sendData){
 
     BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
             << " a->type(): " << a->type()
@@ -434,31 +458,31 @@ void FoJsonTransform::transform(ostream *strm, Array *a, string indent){
 	switch(a->var()->type()){
 	// Handle the atomic types - that's easy!
 	case dods_byte_c:
-		json_simple_type_array<dods_byte>(strm,a,indent);
+		json_simple_type_array<dods_byte>(strm,a,indent, sendData);
 		break;
 
 	case dods_int16_c:
-		json_simple_type_array<dods_int16>(strm,a,indent);
+		json_simple_type_array<dods_int16>(strm,a,indent, sendData);
 		break;
 
 	case dods_uint16_c:
-		json_simple_type_array<dods_uint16>(strm,a,indent);
+		json_simple_type_array<dods_uint16>(strm,a,indent, sendData);
 		break;
 
 	case dods_int32_c:
-		json_simple_type_array<dods_int32>(strm,a,indent);
+		json_simple_type_array<dods_int32>(strm,a,indent, sendData);
 		break;
 
 	case dods_uint32_c:
-		json_simple_type_array<dods_uint32>(strm,a,indent);
+		json_simple_type_array<dods_uint32>(strm,a,indent, sendData);
 		break;
 
 	case dods_float32_c:
-		json_simple_type_array<dods_float32>(strm,a,indent);
+		json_simple_type_array<dods_float32>(strm,a,indent, sendData);
     	break;
 
 	case dods_float64_c:
-		json_simple_type_array<dods_float64>(strm,a,indent);
+		json_simple_type_array<dods_float64>(strm,a,indent, sendData);
 		break;
 
 	case dods_str_c:
@@ -519,38 +543,84 @@ void FoJsonTransform::transform(ostream *strm, Array *a, string indent){
 
 }
 
-void FoJsonTransform::transform(ostream *strm, AttrTable *attr_table, string  indent){
-	AttrTable::Attr_iter begin = attr_table->attr_begin();
-	AttrTable::Attr_iter end = attr_table->attr_end();
 
-	for(AttrTable::Attr_iter at_iter=begin; at_iter < end; at_iter++){
-		switch ((*at_iter)->type){
-			case Attr_container:
-			{
-				transform(strm, (AttrTable*) *at_iter, indent + _indent_increment);
-				break;
+void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  indent){
 
-			}
-			default:
-			{
-				*strm << indent << (*at_iter)->name  << ": [";
-				vector<string> *values = (*at_iter)->attr;
-				for(int i=0; i<values->size() ;i++){
-					if(i>0)
-						*strm << ",";
+	string child_indent = indent + _indent_increment;
 
-					*strm << (*values)[i] ;
+	*strm << indent << "\"attributes\": [";
+
+
+//	if(attr_table.get_name().length()>0)
+//		*strm  << endl << child_indent << "{\"name\": \"name\", \"value\": \"" << attr_table.get_name() << "\"},";
+
+
+	if(attr_table.get_size() != 0) {
+		*strm << endl;
+		AttrTable::Attr_iter begin = attr_table.attr_begin();
+		AttrTable::Attr_iter end = attr_table.attr_end();
+
+
+		for(AttrTable::Attr_iter at_iter=begin; at_iter !=end; at_iter++){
+
+			switch (attr_table.get_attr_type(at_iter)){
+				case Attr_container:
+				{
+					AttrTable *atbl = attr_table.get_attr_table(at_iter);
+
+					if(at_iter != begin )
+						*strm << "," << endl;
+
+					*strm << child_indent << "{" << endl;
+
+					if(atbl->get_name().length()>0)
+						*strm << child_indent + _indent_increment << "\"name\": \"" << atbl->get_name() << "\"," << endl;
+
+
+					transform(strm, *atbl, child_indent + _indent_increment);
+					*strm << endl << child_indent << "}";
+
+					break;
+
 				}
-				*strm << "]";
-				break;
-			}
+				default:
+				{
+					if(at_iter != begin)
+						*strm << "," << endl;
 
-	    }
+					*strm << child_indent << "{\"name\": \""<< attr_table.get_name(at_iter) << "\", ";
+					*strm  << "\"value\": [";
+					vector<string> *values = attr_table.get_attr_vector(at_iter);
+					for(int i=0; i<values->size() ;i++){
+						if(i>0)
+							*strm << ",";
+						if(attr_table.get_attr_type(at_iter) == Attr_string || attr_table.get_attr_type(at_iter) == Attr_url){
+							*strm << "\"";
+
+							string value = (*values)[i] ;
+							*strm << backslash_escape(value, '"') ;
+							*strm << "\"";
+						}
+						else {
+							*strm << (*values)[i] ;
+						}
+
+					}
+					*strm << "]}";
+					break;
+				}
+
+			}
+		}
+		*strm << endl << indent;
+
 	}
+
+	*strm << "]";
+
 
 
 }
-
 
 
 
