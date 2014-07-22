@@ -63,7 +63,7 @@ using std::istringstream;
  */
 string backslash_escape(string source, char char_to_escape){
 	string escaped_result = source;
-	if(source.find(char_to_escape) >= 0 ){
+	if(source.find(char_to_escape) != string::npos ){
 		size_t found = 0;
 		for(size_t i=0; i< source.length() ; i++){
 			if(source[i] == char_to_escape){
