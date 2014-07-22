@@ -61,7 +61,7 @@ using std::istringstream;
  * Replace every occurrence of 'char_to_escape' with the same preceded
  * by the backslash '\' character.
  */
-string backslash_escape(string source, char char_to_escape){
+string FoJsonTransform::backslash_escape(string source, char char_to_escape){
 	string escaped_result = source;
 	if(source.find(char_to_escape) != string::npos ){
 		size_t found = 0;
@@ -75,7 +75,7 @@ string backslash_escape(string source, char char_to_escape){
 }
 
 
-long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
+long FoJsonTransform::computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
     BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - BEGIN. Array name: "<< a->name() << endl);
 
     libdap::Array::Dim_iter dIt;
@@ -110,7 +110,7 @@ long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
     return totalSize;
 }
 
-template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
+template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
 
 	*strm << "[";
 
@@ -139,7 +139,7 @@ template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, 
 }
 
 
-template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData){
+template<typename T>void FoJsonTransform::json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData){
 
 	*strm << indent << "\"" << a->name() + "\": ";
     int numDim = a->dimensions(true);
