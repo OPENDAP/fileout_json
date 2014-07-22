@@ -61,6 +61,12 @@ private:
 	string _returnAs;
 	string _indent_increment;
 
+	string backslash_escape(string source, char char_to_escape);
+	long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape );
+
+	template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim);
+	template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData);
+
 	void transformAtomic(ostream *strm, BaseType *bt, string indent, bool sendData);
 
 	void transform(ostream *strm, DDS *dds, string indent, bool sendData);
