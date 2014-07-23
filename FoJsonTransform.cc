@@ -50,6 +50,10 @@ using std::istringstream;
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
+#include <utils.h>
+
+
+
 #define ATTRIBUTE_SEPARATOR "."
 #define JSON_ORIGINAL_NAME "json_original_name"
 
@@ -57,58 +61,6 @@ using std::istringstream;
 
 #define FoJsonTransform_debug_key "fojson"
 
-/**
- * Replace every occurrence of 'char_to_escape' with the same preceded
- * by the backslash '\' character.
- */
-string FoJsonTransform::backslash_escape(string source, char char_to_escape){
-	string escaped_result = source;
-	if(source.find(char_to_escape) != string::npos ){
-		size_t found = 0;
-		for(size_t i=0; i< source.length() ; i++){
-			if(source[i] == char_to_escape){
-				escaped_result.insert( i + found++, "\\");
-			}
-		}
-	}
-	return escaped_result;
-}
-
-
-long FoJsonTransform::computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape ){
-    BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - BEGIN. Array name: "<< a->name() << endl);
-
-    libdap::Array::Dim_iter dIt;
-    unsigned int start;
-    unsigned int stride;
-    unsigned int stop;
-
-    unsigned int dimSize = 1;
-    int dimNum = 0;
-    long totalSize = 1;
-
-    BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - Array has " << a->dimensions(true) << " dimensions."<< endl);
-
-    stringstream msg;
-
-    for(dIt = a->dim_begin() ; dIt!=a->dim_end() ;dIt++){
-        BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - Processing dimension '" << a->dimension_name(dIt)<< "'. (dim# "<< dimNum << ")"<< endl);
-        start  = a->dimension_start(dIt, true);
-        stride = a->dimension_stride(dIt, true);
-        stop   = a->dimension_stop(dIt, true);
-        BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - start: " << start << "  stride: " << stride << "  stop: "<<stop<< endl);
-
-        dimSize = 1 + ( (stop - start) / stride);
-        BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - dimSize: " << dimSize << endl);
-
-        (*shape)[dimNum++] = dimSize;
-        totalSize *= dimSize;
-    }
-    BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - totalSize: " << totalSize << endl);
-    BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::computeConstrainedShape() - END." << endl);
-
-    return totalSize;
-}
 
 template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
 
@@ -141,17 +93,18 @@ template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worke
 
 template<typename T>void FoJsonTransform::json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData){
 
-	*strm << indent << "\"" << a->name() + "\": ";
-    int numDim = a->dimensions(true);
-    vector<unsigned int> shape(numDim);
-    long length = computeConstrainedShape(a, &shape);
+	*strm << indent << "\"" << a->name() + "\":  ";
 
-	//Attributes
-	transform(strm, a->get_attr_table(), indent);
 
-	*strm << "," << endl;
 
-    if(sendData){
+    if(sendData){ // send data
+        int numDim = a->dimensions(true);
+        vector<unsigned int> shape(numDim);
+        long length = computeConstrainedShape(a, &shape);
+
+
+    	//*strm << "," << endl;
+
 		T *src = new T[length];
 		a->value(src);
 		unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
@@ -159,8 +112,15 @@ template<typename T>void FoJsonTransform::json_simple_type_array(ostream *strm, 
 		if(length != indx)
 			BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 		delete src;
-
     }
+    else { // otherwise send metadata
+    	*strm << "{" << endl;
+    	//Attributes
+    	transform(strm, a->get_attr_table(), indent+_indent_increment);
+    	*strm << endl;
+    	*strm << indent << "}";
+    }
+
 }
 
 
@@ -258,7 +218,23 @@ void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent, bool sen
 
 	bool sentSomething = false;
 
-	*strm << "{" << endl << "\"" << dds->get_dataset_name() << "\": {" << endl;
+
+	// Start returned object
+	*strm << "{" << endl;
+
+
+
+	// Name object
+	*strm << indent + _indent_increment << "\"name\": \"" << dds->get_dataset_name() << "\"," << endl;
+
+	if(!sendData){
+		//Attributes
+		transform(strm, dds->get_attr_table(), indent);
+		if(dds->get_attr_table().get_size()>0)
+			*strm << ",";
+		*strm << endl;
+	}
+
     if(dds->num_var() > 0){
 
 		DDS::Vars_iter vi = dds->var_begin();
@@ -280,7 +256,11 @@ void FoJsonTransform::transform(ostream *strm, DDS *dds, string indent, bool sen
 
 		}
     }
-    *strm <<  endl <<  "}" << endl << "}" << endl;
+    // Closed named object
+    //*strm <<  endl <<  "}";
+
+    // Close returned object
+    *strm << endl << "}" << endl;
 
 }
 
@@ -344,7 +324,13 @@ void FoJsonTransform::transform(ostream *strm, BaseType *bt, string  indent, boo
 
 void FoJsonTransform::transformAtomic(ostream *strm, BaseType *b, string indent, bool sendData){
 	*strm << indent << "\"" << b->name() <<  "\": ";
-	b->print_val(*strm, "", false);
+
+	if(sendData){
+		b->print_val(*strm, "", false);
+	}
+	else {
+		transform(strm, b->get_attr_table(), indent);
+	}
 }
 
 
@@ -548,7 +534,6 @@ void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  in
 
 	string child_indent = indent + _indent_increment;
 
-	*strm << indent << "\"attributes\": [";
 
 
 //	if(attr_table.get_name().length()>0)
@@ -556,7 +541,7 @@ void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  in
 
 
 	if(attr_table.get_size() != 0) {
-		*strm << endl;
+		//*strm << endl;
 		AttrTable::Attr_iter begin = attr_table.attr_begin();
 		AttrTable::Attr_iter end = attr_table.attr_end();
 
@@ -571,14 +556,12 @@ void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  in
 					if(at_iter != begin )
 						*strm << "," << endl;
 
-					*strm << child_indent << "{" << endl;
-
 					if(atbl->get_name().length()>0)
-						*strm << child_indent + _indent_increment << "\"name\": \"" << atbl->get_name() << "\"," << endl;
+						*strm << child_indent  << "\"" << atbl->get_name() << "\": {" << endl;
 
 
 					transform(strm, *atbl, child_indent + _indent_increment);
-					*strm << endl << child_indent << "}";
+					*strm << endl << child_indent  << "}";
 
 					break;
 
@@ -588,8 +571,8 @@ void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  in
 					if(at_iter != begin)
 						*strm << "," << endl;
 
-					*strm << child_indent << "{\"name\": \""<< attr_table.get_name(at_iter) << "\", ";
-					*strm  << "\"value\": [";
+					*strm << child_indent << "\""<< attr_table.get_name(at_iter) << "\": ";
+					*strm  << "[";
 					vector<string> *values = attr_table.get_attr_vector(at_iter);
 					for(int i=0; i<values->size() ;i++){
 						if(i>0)
@@ -606,17 +589,15 @@ void FoJsonTransform::transform(ostream *strm, AttrTable &attr_table, string  in
 						}
 
 					}
-					*strm << "]}";
+					*strm << "]";
 					break;
 				}
 
 			}
 		}
-		*strm << endl << indent;
 
 	}
 
-	*strm << "]";
 
 
 

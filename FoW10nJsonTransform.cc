@@ -54,31 +54,12 @@ using std::istringstream;
 #include <BESInternalError.h>
 
 
+#include <utils.h>
 
 
 #define FoW10nJsonTransform_debug_key "fojson"
 
-/**
- * Replace every occurrence of 'char_to_escape' with the same preceded
- * by the backslash '\' character.
- */
-string backslash_escape(string source, char char_to_escape){
-	string escaped_result = source;
-	if(source.find(char_to_escape) >= 0 ){
-		size_t found = 0;
-		for(size_t i=0; i< source.length() ; i++){
-			if(source[i] == char_to_escape){
-				escaped_result.insert( i + found++, "\\");
-			}
-		}
-	}
-	return escaped_result;
-}
 
-
-
-
-long computeConstrainedShape(libdap::Array *a, vector<unsigned int> *shape );
 string getW10nTypeString(BaseType *bt){
 	switch(bt->type()){
 	// Handle the atomic types - that's easy!
