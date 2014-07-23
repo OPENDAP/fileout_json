@@ -44,7 +44,7 @@
 #include "Grid.h"
 
 #include "test_config.h"
-// #include "FoJsonTransform.h"
+#include "FoJsonTransform.h"
 #include "FoW10nJsonTransform.h"
 
 #include "BESDebug.h"
@@ -129,11 +129,14 @@ public:
 
     CPPUNIT_TEST_SUITE( FoJsonTest );
 
-    CPPUNIT_TEST(test_DDS);
+    CPPUNIT_TEST(test_abstract_object_metadata_representation);
+    CPPUNIT_TEST(test_abstract_object_data_representation);
+    CPPUNIT_TEST(test_instance_object_metadata_representation);
+    CPPUNIT_TEST(test_instance_object_data_representation);
 
     CPPUNIT_TEST_SUITE_END();
 
-    void test_DDS() {
+    void test_abstract_object_metadata_representation() {
         //CPPUNIT_ASSERT(false);
 
     	DBG(cerr << endl);
@@ -141,38 +144,209 @@ public:
         	// libdap::DataDDS *test_DDS = makeSimpleTypesDDS();
         	libdap::DataDDS *test_DDS = makeTestDDS();
 
-        	DBG(cerr << "FoJsonTest::test_DDS() - BEGIN" << endl);
-        	DBG(cerr << "FoJsonTest::test_DDS() - d_tmpDir: " << d_tmpDir << endl);
+        	DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - BEGIN" << endl);
+        	DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - d_tmpDir: " << d_tmpDir << endl);
 
-        	string tmpFile(d_tmpDir + "/test_DDS.json");
-        	DBG(cerr << "FoJsonTest::test_DDS() - tmpFile: " << tmpFile << endl);
+        	//############################# DATA TEST ####################################
+        	string tmpFile(d_tmpDir + "/test_abstract_object_representation_METADATA.json");
+        	DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - tmpFile: " << tmpFile << endl);
 
             BESDataHandlerInterface dhi;
+
             // FoJsonTransform ft(test_DDS, dhi, tmpFile );
             FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
 
-        	DBG(cerr << "FoJsonTest::test_DDS() - Calling FoJsonTransform::transform()" << endl);
+        	DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - Calling FoJsonTransform::transform(false) - Send metadata" << endl);
+
+            ft.transform(false);
+
+            // Compare the result with the baseline file.
+            string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_METADATA.json.baseline");
+            string result   = fileToString(tmpFile);
+            ConstraintEvaluator ce;
+
+            DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - baseline: " << endl << baseline << endl);
+            DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - result: " << endl << result << endl);
+
+
+            DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - baseline.compare(result): " << baseline.compare(result) << endl);
+
+            CPPUNIT_ASSERT(baseline.compare(result)==0 );
+
+        	DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
+
+			delete test_DDS;
+
+        	DBG(cerr << " FoJsonTest::test_abstract_object_metadata_representation() - END" << endl);
+            CPPUNIT_ASSERT(true);
+
+        } catch (std::string &e) {
+            cerr << "Error: " << e << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (...) {
+            cerr << "Unknown Error." << endl;
+            CPPUNIT_ASSERT(false);
+        }
+
+
+    }
+
+    void test_abstract_object_data_representation() {
+        //CPPUNIT_ASSERT(false);
+
+    	DBG(cerr << endl);
+        try {
+        	// libdap::DataDDS *test_DDS = makeSimpleTypesDDS();
+        	libdap::DataDDS *test_DDS = makeTestDDS();
+
+        	DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - BEGIN" << endl);
+        	DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - d_tmpDir: " << d_tmpDir << endl);
+
+        	//############################# DATA TEST ####################################
+        	string tmpFile(d_tmpDir + "/test_abstract_object_representation_DATA.json");
+        	DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - tmpFile: " << tmpFile << endl);
+
+            BESDataHandlerInterface dhi;
+
+            // FoJsonTransform ft(test_DDS, dhi, tmpFile );
+            FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
+
+        	DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - Calling FoJsonTransform::transform(true) - Send data." << endl);
 
             ft.transform(true);
 
             // Compare the result with the baseline file.
-            string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/test_DDS.json.baseline");
+            string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_DATA.json.baseline");
             string result   = fileToString(tmpFile);
             ConstraintEvaluator ce;
 
-            DBG(cerr << "FoJsonTest::test_DDS() - baseline: " << endl << baseline << endl);
-            DBG(cerr << "FoJsonTest::test_DDS() - result: " << endl << result << endl);
+            DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - baseline: " << endl << baseline << endl);
+            DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - result: " << endl << result << endl);
 
 
-            DBG(cerr << "FoJsonTest::test_DDS() - baseline.compare(result): " << baseline.compare(result) << endl);
+            DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - baseline.compare(result): " << baseline.compare(result) << endl);
 
             CPPUNIT_ASSERT(baseline.compare(result)==0 );
 
-        	DBG(cerr << "FoJsonTest::test_DDS() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
+        	DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
 
 			delete test_DDS;
 
-        	DBG(cerr << " FoJsonTest::test_DDS() - END" << endl);
+        	DBG(cerr << " FoJsonTest::test_abstract_object_data_representation() - END" << endl);
+            CPPUNIT_ASSERT(true);
+
+        } catch (std::string &e) {
+            cerr << "Error: " << e << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (...) {
+            cerr << "Unknown Error." << endl;
+            CPPUNIT_ASSERT(false);
+        }
+
+
+    }
+
+    void test_instance_object_metadata_representation() {
+        //CPPUNIT_ASSERT(false);
+
+    	DBG(cerr << endl);
+        try {
+        	// libdap::DataDDS *test_DDS = makeSimpleTypesDDS();
+        	libdap::DataDDS *test_DDS = makeTestDDS();
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - BEGIN" << endl);
+        	DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - d_tmpDir: " << d_tmpDir << endl);
+
+
+        	//############################# METADATA TEST ####################################
+        	string tmpFile(d_tmpDir + "/test_instance_object_representation_METADATA.json");
+        	DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - tmpFile: " << tmpFile << endl);
+
+            BESDataHandlerInterface dhi;
+
+            FoJsonTransform ft(test_DDS, dhi, tmpFile );
+            //FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - Calling FoJsonTransform::transform(false) (send metadata)" << endl);
+
+            ft.transform(false);
+
+            // Compare the result with the baseline file.
+            string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_METADATA.json.baseline");
+            string result   = fileToString(tmpFile);
+            ConstraintEvaluator ce;
+
+            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - baseline: " << endl << baseline << endl);
+            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - result: " << endl << result << endl);
+
+            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - baseline.compare(result): " << baseline.compare(result) << endl);
+
+            CPPUNIT_ASSERT(baseline.compare(result)==0 );
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
+
+			delete test_DDS;
+
+        	DBG(cerr << " FoJsonTest::test_instance_object_metadata_representation() - END" << endl);
+            CPPUNIT_ASSERT(true);
+
+        } catch (std::string &e) {
+            cerr << "Error: " << e << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (...) {
+            cerr << "Unknown Error." << endl;
+            CPPUNIT_ASSERT(false);
+        }
+
+
+    }
+
+    void test_instance_object_data_representation() {
+        //CPPUNIT_ASSERT(false);
+
+    	DBG(cerr << endl);
+        try {
+        	// libdap::DataDDS *test_DDS = makeSimpleTypesDDS();
+        	libdap::DataDDS *test_DDS = makeTestDDS();
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - BEGIN" << endl);
+        	DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - d_tmpDir: " << d_tmpDir << endl);
+
+
+
+        	//############################# DATA TEST ####################################
+        	string tmpFile(d_tmpDir + "/test_instance_object_representation_DATA.json");
+        	DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - tmpFile: " << tmpFile << endl);
+
+            BESDataHandlerInterface dhi;
+
+            FoJsonTransform ft(test_DDS, dhi, tmpFile );
+            //FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - Calling FoJsonTransform::transform(true) (send data)" << endl);
+
+            ft.transform(true);
+
+            // Compare the result with the baseline file.
+            string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_DATA.json.baseline");
+            string result   = fileToString(tmpFile);
+            ConstraintEvaluator ce;
+
+            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - baseline: " << endl << baseline << endl);
+            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - result: " << endl << result << endl);
+
+            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - baseline.compare(result): " << baseline.compare(result) << endl);
+
+            CPPUNIT_ASSERT(baseline.compare(result)==0 );
+
+
+
+
+        	DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
+
+			delete test_DDS;
+
+        	DBG(cerr << " FoJsonTest::test_instance_object_data_representation() - END" << endl);
             CPPUNIT_ASSERT(true);
 
         } catch (std::string &e) {
