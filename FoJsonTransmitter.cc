@@ -69,16 +69,15 @@ using namespace ::libdap;
 
 string FoJsonTransmitter::temp_dir;
 
-/** @brief Construct the FoJsonTransmitter, adding it with name netcdf to be
- * able to transmit a data response
+/** @brief Construct the FoJsonTransmitter.
  *
  * The transmitter is created to add the ability to return OPeNDAP data
- * objects (DataDDS) as a netcdf file.
+ * objects (DataDDS) as instance object representation JSON documents.
  *
- * The OPeNDAP data object is written to a netcdf file locally in a
+ * The OPeNDAP data object is written to a JSON file locally in a
  * temporary directory specified by the BES configuration parameter
  * FoJson.Tempdir. If this variable is not found or is not set then it
- * defaults to the macro definition FONC_TEMP_DIR.
+ * defaults to the macro definition FO_JSON_TEMP_DIR.
  */
 FoJsonTransmitter::FoJsonTransmitter() :
 		BESBasicTransmitter()
@@ -102,19 +101,19 @@ FoJsonTransmitter::FoJsonTransmitter() :
 }
 
 /** @brief The static method registered to transmit OPeNDAP data objects as
- * a netcdf file.
+ * a JSON file.
  *
  * This function takes the OPeNDAP DataDDS object, reads in the data (can be
- * used with any data handler), transforms the data into a netcdf file, and
- * streams back that netcdf file back to the requester using the stream
+ * used with any data handler), transforms the data into a JSON file, and
+ * streams back that JSON file back to the requester using the stream
  * specified in the BESDataHandlerInterface.
  *
  * @param obj The BESResponseObject containing the OPeNDAP DataDDS object
  * @param dhi BESDataHandlerInterface containing information about the
  * request and response
  * @throws BESInternalError if the response is not an OPeNDAP DataDDS or if
- * there are any problems reading the data, writing to a netcdf file, or
- * streaming the netcdf file
+ * there are any problems reading the data, writing to a JSON file, or
+ * streaming the JSON file
  */
 void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
@@ -140,19 +139,19 @@ void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterfac
 }
 
 /** @brief The static method registered to transmit OPeNDAP data objects as
- * a netcdf file.
+ * a JSON file.
  *
  * This function takes the OPeNDAP DataDDS object, reads in the data (can be
- * used with any data handler), transforms the data into a netcdf file, and
- * streams back that netcdf file back to the requester using the stream
+ * used with any data handler), transforms the data into a JSON file, and
+ * streams back that JSON file back to the requester using the stream
  * specified in the BESDataHandlerInterface.
  *
  * @param obj The BESResponseObject containing the OPeNDAP DataDDS object
  * @param dhi BESDataHandlerInterface containing information about the
  * request and response
  * @throws BESInternalError if the response is not an OPeNDAP DataDDS or if
- * there are any problems reading the data, writing to a netcdf file, or
- * streaming the netcdf file
+ * there are any problems reading the data, writing to a JSON file, or
+ * streaming the JSON file
  */
 void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
@@ -176,9 +175,15 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
     send_json(dds, eval, dhi, false);
 }
 
-/** @brief version of the send_data() method that takes only libdap/STL objects.
+/** @brief The send_json() method transmits both data and metadata responses.
  *
  * @note Used for unit tests.
+ * @param dds The DDS to transform into JSON
+ * @param ce the constraint evaluator to use to mark the variables.
+ * @param dhi The data interface containing information about the current
+ * request.
+ * @param sendData If the sendData parameter is true data will be
+ * sent. If sendData is false then the metadata will be sent.
  */
 void FoJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData)
 {

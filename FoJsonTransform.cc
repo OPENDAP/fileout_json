@@ -59,7 +59,9 @@
 
 #define FoJsonTransform_debug_key "fojson"
 
-
+/**
+ * Writes out the values of an n-dimensional array. Uses recursion.
+ */
 template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worker(std::ostream *strm, T *values, unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim){
 
 	*strm << "[";
@@ -89,6 +91,14 @@ template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worke
 }
 
 
+/**
+ * @brief Writes out (in a JSON instance object representation) the metadata and data values for the passed array of simple types.
+ *
+ * @param strm Where to write stuff
+ * @param a The libdap::Array to write.
+ * @param indent A string containing the indent level.
+ * @param sendData A boolean value that when evaluated as true will cause the data values to be sent and not the metadata.
+ */
 template<typename T>void FoJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a, string indent, bool sendData){
 
 	*strm << indent << "\"" << a->name() + "\":  ";
@@ -168,7 +178,7 @@ FoJsonTransform::~FoJsonTransform()
  *
  * Displays the pointer value of this instance plus instance data,
  * including all of the FoJson objects converted from DAP objects that are
- * to be sent to the netcdf file.
+ * to be sent to the JSON file.
  *
  * @param strm C++ i/o stream to dump the information to
  */
@@ -186,13 +196,12 @@ void FoJsonTransform::dump(std::ostream &strm) const
 
 
 
-/** @brief Transforms each of the variables of the DataDDS to the NetCDF
- * file
+/** @brief Transforms the DDS object into a JSON instance object representation.
  *
- * For each variable in the DataDDS write out that variable and its
- * attributes to the netcdf file. Each OPeNDAP data type translates into a
- * particular netcdf type. Also write out any global variables stored at the
- * top level of the DataDDS.
+ * Transforms the DDS and all of it's "projected" variables into a JSON document using
+ * an instance object representation.
+ * @param sendData If the sendData parameter is true data will be
+ * sent. If sendData is false then the metadata will be sent.
  */
 void FoJsonTransform::transform(bool sendData)
 {
@@ -215,13 +224,23 @@ void FoJsonTransform::transform(bool sendData)
 
 
 
+/** @brief Transforms the DDS object into a JSON instance object representation.
+ *
+ * Transforms the DDS and all of it's "projected" variables into a JSON document using
+ * an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param dds The DDS to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string indent, bool sendData){
 
 
 	bool sentSomething = false;
 
 
-	// Start returned object
+	// Open returned JSON object
 	*strm << "{" << endl;
 
 
@@ -230,6 +249,8 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string ind
 	*strm << indent + _indent_increment << "\"name\": \"" << dds->get_dataset_name() << "\"," << endl;
 
 	if(!sendData){
+		// Send metadata if we aren't sending data
+
 		//Attributes
 		transform(strm, dds->get_attr_table(), indent);
 		if(dds->get_attr_table().get_size()>0)
@@ -237,6 +258,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string ind
 		*strm << endl;
 	}
 
+	// Process the variables in the DDS
     if(dds->num_var() > 0){
 
 		libdap::DDS::Vars_iter vi = dds->var_begin();
@@ -258,14 +280,21 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string ind
 
 		}
     }
-    // Closed named object
-    //*strm <<  endl <<  "}";
 
-    // Close returned object
+    // Close the JSON object
     *strm << endl << "}" << endl;
 
 }
 
+/** @brief Transforms the BaseType object into a JSON instance object representation.
+ *
+ * Transforms the BaseType into a JSON document using an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param bt The BaseType to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::BaseType *bt, string  indent, bool sendData)
 {
 	switch(bt->type()){
@@ -324,6 +353,16 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::BaseType *bt, string
 }
 
 
+/** @brief Transforms the BaseType object into a JSON instance object representation.
+ *
+ * Transforms the BaseType into a JSON document using an instance object representation. The assumption here is
+ * that the passed BaseType is an "atomic" type.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param bt The BaseType to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transformAtomic(std::ostream *strm, libdap::BaseType *b, string indent, bool sendData){
 	*strm << indent << "\"" << b->name() <<  "\": ";
 
@@ -336,14 +375,28 @@ void FoJsonTransform::transformAtomic(std::ostream *strm, libdap::BaseType *b, s
 }
 
 
+/** @brief Transforms the Structure object into a JSON instance object representation.
+ *
+ * Transforms the Structure into a JSON document using an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param bt The Structure to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::Structure *b, string indent, bool sendData){
 
+	// Open object with name of the structure
 	*strm << indent << "\"" << b->name() << "\": {" << endl;
+
+	// Process the variables.
     if(b->width(true) > 0){
 
     	libdap::Structure::Vars_iter vi = b->var_begin();
     	libdap::Structure::Vars_iter ve = b->var_end();
 		for (; vi != ve; vi++) {
+
+			// If the variable is projected, send (transform) it.
 			if ((*vi)->send_p()) {
 				libdap::BaseType *v = *vi;
 				BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing structure variable: " << v->name() << endl);
@@ -359,15 +412,27 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Structure *b, string
 }
 
 
+/** @brief Transforms the Grid object into a JSON instance object representation.
+ *
+ * Transforms the Grid into a JSON document using an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param bt The Grid to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::Grid *g, string indent, bool sendData){
 
+	// Open JSON property object with name of the grid
     *strm << indent << "\"" << g->name() << "\": {" << endl;
 
 	BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Grid data Array: " << g->get_array()->name() << endl);
 
+	// Process the data array
 	transform(strm, g->get_array(), indent+_indent_increment, sendData);
     *strm << "," << endl;
 
+    // Process the MAP arrays
 	for(libdap::Grid::Map_iter mapi=g->map_begin(); mapi < g->map_end(); mapi++){
 		BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Grid Map Array: " << (*mapi)->name() << endl);
 		if(mapi != g->map_begin()){
@@ -375,12 +440,23 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Grid *g, string inde
 		}
 		transform(strm, *mapi, indent+_indent_increment, sendData);
 	}
+	// Close the JSON property object
     *strm << endl << indent << "}";
 
 }
 
+/** @brief Transforms the Sequence object into a JSON instance object representation.
+ *
+ * Transforms the Sequence into a JSON document using an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param s The Sequence to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::Sequence *s, string indent, bool sendData){
 
+	// Open JSON property object with name of the sequence
 	*strm << indent << "\"" <<  s->name() << "\": {" << endl;
 
 	string child_indent = indent + _indent_increment;
@@ -431,11 +507,21 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Sequence *s, string 
 	}
 	*strm << endl << child_indent << "]" << endl;
 
+	// Close the JSON property object
     *strm << indent << "}" << endl;
 
 }
 
 
+/** @brief Transforms the Array object into a JSON instance object representation.
+ *
+ * Transforms the Array into a JSON document using an instance object representation.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param a The Array to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string indent, bool sendData){
 
     BESDEBUG(FoJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
@@ -540,49 +626,71 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
 }
 
 
+/** @brief Transforms the AttrTable object into a JSON instance object representation.
+ *
+ * Transforms the AttrTable into a JSON document using an instance object representation.
+ * Since Attributes get promoted to "properties" of their parent container (either a
+ * BaseType variable or a DDS) the is method does not open a new JSON object, but rather
+ * continues to add content to the currently open object.
+ *
+ * @param strm Stream to which to write JSON.
+ * @param a The AttrTable to produce JSON from.
+ * @param indent White space indent.
+ * @param sendData If the sendData parameter is true data will be sent. If sendData is false then the metadata will be sent.
+ */
 void FoJsonTransform::transform(std::ostream *strm, libdap::AttrTable &attr_table, string  indent){
 
+	/*
+	 * Since Attributes get promoted to JSON "properties" of their parent object (either a
+	 * BaseType variable or a DDS derived JSON object) this method does not open a new JSON
+	 * object, but rather continues to add content to the currently open object.
+	 */
 	string child_indent = indent + _indent_increment;
 
 
-
-//	if(attr_table.get_name().length()>0)
-//		*strm  << endl << child_indent << "{\"name\": \"name\", \"value\": \"" << attr_table.get_name() << "\"},";
-
-
+	// Are there any attributes?
 	if(attr_table.get_size() != 0) {
 		//*strm << endl;
 		libdap::AttrTable::Attr_iter begin = attr_table.attr_begin();
 		libdap::AttrTable::Attr_iter end = attr_table.attr_end();
 
 
+		// Process each Attribute
 		for(libdap::AttrTable::Attr_iter at_iter=begin; at_iter !=end; at_iter++){
 
 			switch (attr_table.get_attr_type(at_iter)){
-				case libdap::Attr_container:
+
+				case libdap::Attr_container:    // If it's a container attribute
 				{
 					libdap::AttrTable *atbl = attr_table.get_attr_table(at_iter);
 
 					if(at_iter != begin )
 						*strm << "," << endl;
 
-					if(atbl->get_name().length()>0)
-						*strm << child_indent  << "\"" << atbl->get_name() << "\": {" << endl;
+					// Open a JSON property with the name of the Attribute Table and
+					*strm << child_indent  << "\"" << atbl->get_name() << "\": {" << endl;
 
-
+					// Process the Attribute Table.
 					transform(strm, *atbl, child_indent + _indent_increment);
+
+					// Close JSON property object
 					*strm << endl << child_indent  << "}";
 
 					break;
 
 				}
-				default:
+				default: // so it's not an Attribute Table. woot. time to print
 				{
+					// First?
 					if(at_iter != begin)
 						*strm << "," << endl;
 
+					// Name of property
 					*strm << child_indent << "\""<< attr_table.get_name(at_iter) << "\": ";
+
+					// Open values array
 					*strm  << "[";
+					// Process value(s)
 					vector<string> *values = attr_table.get_attr_vector(at_iter);
 					for(int i=0; i<values->size() ;i++){
 						if(i>0)
@@ -599,6 +707,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::AttrTable &attr_tabl
 						}
 
 					}
+					// Close values array
 					*strm << "]";
 					break;
 				}
