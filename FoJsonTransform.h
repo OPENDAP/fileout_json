@@ -34,64 +34,55 @@
 #include <vector>
 #include <map>
 
-using std::string ;
-using std::vector ;
-using std::map ;
+//using std::string ;
+//using std::vector ;
+//using std::map ;
 
 #include <DDS.h>
 #include <Array.h>
 
-using namespace::libdap ;
+//using namespace::libdap ;
 
 #include <BESObj.h>
 #include <BESDataHandlerInterface.h>
 
 
-/** @brief Transformation object that converts an OPeNDAP DataDDS to a
- * netcdf file
+/**
+ * @brief Transforms a DDS into JSON document on disk.
  *
- * This class transforms each variable of the DataDDS to a netcdf file. For
- * more information on the transformation please refer to the OpeNDAP
- * documents wiki.
+ * Used to transform a DDS into an instance object representation (meta)data JSON document.
+ * The output is written to a local file whose name is passed as a parameter
+ * to the constructor.
  */
 class FoJsonTransform: public BESObj {
 private:
-	DDS *_dds;
+	libdap::DDS *_dds;
 	string _localfile;
 	string _returnAs;
 	string _indent_increment;
 
-	template<typename T> unsigned  int json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim);
-	template<typename T>void json_simple_type_array(ostream *strm, Array *a, string indent, bool sendData);
+	template<typename T> unsigned  int json_simple_type_array_worker(std::ostream *strm, T *values, unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim);
+	template<typename T>void json_simple_type_array(ostream *strm, libdap::Array *a, string indent, bool sendData);
 
-	void transformAtomic(ostream *strm, BaseType *bt, string indent, bool sendData);
+	void transformAtomic(std::ostream *strm, libdap::BaseType *bt, string indent, bool sendData);
 
-	void transform(ostream *strm, DDS *dds, string indent, bool sendData);
-	void transform(ostream *strm, BaseType *bt, string indent, bool sendData);
-    void transform(ostream *strm, Structure *s,string indent, bool sendData );
-    void transform(ostream *strm, Grid *g, string indent, bool sendData);
-    void transform(ostream *strm, Sequence *s, string indent, bool sendData);
+	void transform(std::ostream *strm, libdap::DDS *dds, string indent, bool sendData);
+	void transform(std::ostream *strm, libdap::BaseType *bt, string indent, bool sendData);
+    void transform(std::ostream *strm, libdap::Structure *s,string indent, bool sendData );
+    void transform(std::ostream *strm, libdap::Grid *g, string indent, bool sendData);
+    void transform(std::ostream *strm, libdap::Sequence *s, string indent, bool sendData);
 
-    void transform(ostream *strm, Array *a, string indent, bool sendData);
+    void transform(std::ostream *strm, libdap::Array *a, string indent, bool sendData);
 
-    void transform(ostream *strm, AttrTable &attr_table, string  indent);
+    void transform(std::ostream *strm, libdap::AttrTable &attr_table, string  indent);
 
 public:
-	/**
-	 * Build a FoJsonTransform object. By default it builds a netcdf 3 file; pass "netcdf-4"
-	 * to get a netcdf 4 file.
-	 *
-	 * @note added default value to fourth param to preserve the older API. 5/6/13 jhrg
-	 * @param dds
-	 * @param dhi
-	 * @param localfile
-	 * @param netcdfVersion
-	 */
-	FoJsonTransform(DDS *dds, BESDataHandlerInterface &dhi, const string &localfile);
+	FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile);
 	virtual ~FoJsonTransform();
+
 	virtual void transform(bool sendData);
 
-	virtual void dump(ostream &strm) const;
+	virtual void dump(std::ostream &strm) const;
 
 };
 

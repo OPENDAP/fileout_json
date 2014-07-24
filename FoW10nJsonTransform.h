@@ -33,14 +33,11 @@
 #include <vector>
 #include <map>
 
-//using std::string ;
-//using std::vector ;
-//using std::map ;
 
+#include <BaseType.h>
 #include <DDS.h>
 #include <Array.h>
 
-//using namespace::libdap ;
 
 #include <BESObj.h>
 #include <BESDataHandlerInterface.h>

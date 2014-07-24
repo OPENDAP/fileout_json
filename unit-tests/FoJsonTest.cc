@@ -163,7 +163,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_METADATA.json.baseline");
             string result   = fileToString(tmpFile);
-            ConstraintEvaluator ce;
+            libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - result: " << endl << result << endl);
@@ -218,7 +218,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_DATA.json.baseline");
             string result   = fileToString(tmpFile);
-            ConstraintEvaluator ce;
+            libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - result: " << endl << result << endl);
@@ -274,7 +274,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_METADATA.json.baseline");
             string result   = fileToString(tmpFile);
-            ConstraintEvaluator ce;
+            libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - result: " << endl << result << endl);
@@ -330,7 +330,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_DATA.json.baseline");
             string result   = fileToString(tmpFile);
-            ConstraintEvaluator ce;
+            libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - result: " << endl << result << endl);
@@ -466,7 +466,7 @@ public:
 
         int dim1Size = 2;
 		double pi = std::atan(1)*4;
-		dods_float64 oneDdata[dim1Size];
+		libdap::dods_float64 oneDdata[dim1Size];
 		for(long i=0; i<dim1Size ;i++)
 			oneDdata[i] = pi * (i * 0.1);
 
@@ -480,7 +480,7 @@ public:
 
 		int dim2Size = 4;
 		int totalSize = dim1Size * dim2Size;
-		dods_float64 twoDdata[totalSize];
+		libdap::dods_float64 twoDdata[totalSize];
 		for(long i=0; i<totalSize ;i++)
 			twoDdata[i] = pi * (i * 0.01);
 
@@ -495,7 +495,7 @@ public:
         libdap::Array twoDArrayUI32("twoDArrayUI32",&tmplt4);
 
 		totalSize = dim1Size * dim2Size;
-		dods_uint32 uint32data[totalSize];
+		libdap::dods_uint32 uint32data[totalSize];
 		unsigned int val = 0;
 		for(long i=0; i<totalSize ;i++){
 			val = i + val;
@@ -514,7 +514,7 @@ public:
 
 		int dim3Size = 5;
 		totalSize = dim1Size * dim2Size * dim3Size;
-		dods_float64 threeDdata[totalSize];
+		libdap::dods_float64 threeDdata[totalSize];
 		for(long i=0; i<totalSize ;i++)
 			threeDdata[i] = pi * (i * 0.001);
 
@@ -590,9 +590,9 @@ public:
         int lngSize = 36;
         int latSize = 18;
 		totalSize = lngSize * latSize;
-		dods_float64 testData[totalSize];
-		dods_float64 latData[latSize];
-		dods_float64 lngData[lngSize];
+		libdap::dods_float64 testData[totalSize];
+		libdap::dods_float64 latData[latSize];
+		libdap::dods_float64 lngData[lngSize];
 		//unsigned int val = 0;
 		//for(long i=0; i<totalSize ;i++){
 		//	sstData[i] = pi * (i * 0.01);
@@ -610,7 +610,7 @@ public:
 		sstArray.append_dim(latSize,"latitude");
 		sstArray.set_value(testData,totalSize);  // creates space and uses memcopy to transfer values.
 		sstArray.set_send_p(true);
-		grid.add_var(&sstArray,  array); // add a copy
+		grid.add_var(&sstArray,  libdap::array); // add a copy
 
 		lngArray.append_dim(lngSize,"longitude");
 		lngArray.set_value(lngData, lngSize);  // creates space and uses memcopy to transfer values.
