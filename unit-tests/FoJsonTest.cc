@@ -57,14 +57,7 @@ static bool debug = false;
 #undef DBG
 #define DBG(x) do { if (debug) (x); } while(false);
 
-
-
-
-//using namespace GF;
-
 namespace fojson {
-
-
 
 class FoJsonTest: public CppUnit::TestFixture {
 
@@ -74,14 +67,12 @@ private:
 
 	string fileToString(const string &fn)
 	{
-	    int length;
-
 	    ifstream is;
 	    is.open (fn.c_str(), ios::binary );
 
 	    // get length of file:
 	    is.seekg (0, ios::end);
-	    length = is.tellg();
+	    int length = is.tellg();
 
 	    // back to start
 	    is.seekg (0, ios::beg);
@@ -96,8 +87,6 @@ private:
 
 	    return string(&buffer[0]);
 	}
-
-
 
 public:
 
@@ -634,10 +623,7 @@ public:
 
 		return dds;
 	}
-
-
 };
-
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FoJsonTest);
 
