@@ -461,7 +461,6 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Sequence *s, string 
 
 	string child_indent = indent + _indent_increment;
 
-
 #if 0
 	the erdap way
 	*strm << indent << "\"table\": {" << endl;
@@ -472,8 +471,6 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Sequence *s, string 
 
 
 #endif
-
-
 
 	*strm << child_indent <<"\"columnNames\": [";
 	for(libdap::Constructor::Vars_iter v=s->var_begin(); v<s->var_end() ; v++){
@@ -509,7 +506,6 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Sequence *s, string 
 
 	// Close the JSON property object
     *strm << indent << "}" << endl;
-
 }
 
 

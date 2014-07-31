@@ -51,23 +51,16 @@ using namespace libdap;
  */
 class FoW10nJsonTransmitter: public BESBasicTransmitter {
 private:
-    static void return_temp_stream(const string &filename,
-				   ostream &strm,
-				   const string &ncVersion);
+    static void return_temp_stream(const string &filename, ostream &strm);
     static string temp_dir;
-
-
 
 public:
     FoW10nJsonTransmitter();
-    virtual ~FoW10nJsonTransmitter()
-    {
-    }
+    virtual ~FoW10nJsonTransmitter() { }
 
     static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
     static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
-
+    //static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
 #endif // A_FoW10nJsonTransmitter_h

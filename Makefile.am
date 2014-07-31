@@ -21,20 +21,11 @@ libfojson_module_la_LIBADD = $(BES_DAP_LIBS)
 
 FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc \
 	FoW10nJsonTransmitter.cc FoW10nJsonTransform.cc StreamString.cc utils.cc
-#	FoJsonModule.cc FoJsonUtils.cc FoJsonStr.cc FoJsonShort.cc FoJsonInt.cc	\
-#	FoJsonFloat.cc FoJsonDouble.cc FoJsonStructure.cc FoJsonArray.cc	\
-#	FoJsonGrid.cc FoJsonSequence.cc FoJsonByte.cc FoJsonBaseType.cc		\
-#	FoJsonDim.cc FoJsonMap.cc FoJsonAttributes.cc
 
 FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h \
 	FoW10nJsonTransmitter.h FoW10nJsonTransform.h StreamString.h utils.h
-#	FoJsonModule.h FoJsonUtils.h FoJsonStr.h FoJsonShort.h FoJsonInt.h	\
-#	FoJsonFloat.h FoJsonDouble.h FoJsonStructure.h FoJsonArray.h		\
-#	FoJsonGrid.h FoJsonSequence.h FoJsonByte.h FoJsonBaseType.h		\
-#	FoJsonDim.h FoJsonMap.h FoJsonAttributes.h
 
-EXTRA_DIST = data COPYRIGHT COPYING fojson.conf.in fileout_json.spec	\
-	doxy.conf
+EXTRA_DIST = data COPYRIGHT COPYING fojson.conf.in fileout_json.spec doxy.conf
 
 CLEANFILES = *~ fojson.conf
 

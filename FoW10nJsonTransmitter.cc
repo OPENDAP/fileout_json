@@ -26,7 +26,6 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
 #include "config.h"
 
 #include <stdio.h>
@@ -78,8 +77,7 @@ string FoW10nJsonTransmitter::temp_dir;
  * FoJson.Tempdir. If this variable is not found or is not set then it
  * defaults to the macro definition FO_JSON_TEMP_DIR.
  */
-FoW10nJsonTransmitter::FoW10nJsonTransmitter() :
-		BESBasicTransmitter()
+FoW10nJsonTransmitter::FoW10nJsonTransmitter() : BESBasicTransmitter()
 {
     add_method(DATA_SERVICE, FoW10nJsonTransmitter::send_data);
     add_method(DDX_SERVICE,  FoW10nJsonTransmitter::send_metadata);
@@ -117,24 +115,100 @@ FoW10nJsonTransmitter::FoW10nJsonTransmitter() :
 void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDataDDSResponse *bdds = dynamic_cast<BESDataDDSResponse *>(obj);
-    if (!bdds) {
+    if (!bdds)
         throw BESInternalError("cast error", __FILE__, __LINE__);
-    }
 
     DataDDS *dds = bdds->get_dds();
-    if (!dds) {
-        string err = (string) "No DataDDS has been created for transmit";
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
+    if (!dds)
+        throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
 
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - parsing the constraint" << endl);
 
-
-
     ConstraintEvaluator &eval = bdds->get_ce();
 
-    send_json(dds, eval, dhi, true);
+    ostream &o_strm = dhi.get_output_stream();
+    if (!o_strm)
+        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
+
+    // ticket 1248 jhrg 2/23/09
+    string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
+    try {
+        eval.parse_constraint(ce, *dds);
+    }
+    catch (Error &e) {
+        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
+    }
+    catch (...) {
+        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
+    }
+
+    // now we need to read the data
+    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - reading data into DataDDS" << endl);
+
+    try {
+        // Handle *functional* constraint expressions specially
+        if (eval.function_clauses()) {
+            BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
+            DataDDS *tmp_dds = eval.eval_function_clauses(*dds);
+            delete dds;
+            dds = tmp_dds;
+        }
+        else {
+            // Iterate through the variables in the DataDDS and read
+            // in the data if the variable has the send flag set.
+            for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
+                if ((*i)->send_p()) {
+                    (*i)->intern_data(eval, *dds);
+                }
+            }
+        }
+    }
+    catch (Error &e) {
+        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
+    }
+    catch (...) {
+        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
+    }
+
+    string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
+    vector<char> temp_full(temp_file_name.length() + 1);
+    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
+    temp_full[len] = '\0';
+    // cover the case where older versions of mkstemp() create the file using
+    // a mode of 666.
+    mode_t original_mode = umask(077);
+    int fd = mkstemp(&temp_full[0]);
+    // If we keep the temp files, it can be unliked here. jhrg 7/31/14
+    umask(original_mode);
+
+    if (fd == -1)
+        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
+
+    // transform the OPeNDAP DataDDS to the netcdf file
+    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
+
+    try {
+        FoW10nJsonTransform ft(dds, dhi, &temp_full[0]);
+
+        ft.transform( true /* send data too */ );
+
+        FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
+    }
+    catch (BESError &e) {
+        close(fd);
+        (void) unlink(&temp_full[0]);
+        throw;
+    }
+    catch (...) {
+        close(fd);
+        (void) unlink(&temp_full[0]);
+        throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+    }
+
+    close(fd);
+    (void) unlink(&temp_full[0]);
+
+    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
 /** @brief The static method registered to transmit OPeNDAP data objects as
@@ -155,45 +229,20 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
 void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
-    if (!bdds) {
-        throw BESInternalError("Cast to BESDDSResponse error.", __FILE__, __LINE__);
-    }
+    if (!bdds)
+        throw BESInternalError("cast error", __FILE__, __LINE__);
 
     DDS *dds = bdds->get_dds();
-    if (!dds) {
-        string err = (string) "No DataDDS has been created for transmit";
-        BESDEBUG("fojson", "send_metadata() - ERROR: "<< err << endl);
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
+    if (!dds)
+        throw BESInternalError("No DDS has been created for transmit", __FILE__, __LINE__);
 
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_metadata - parsing the constraint" << endl);
 
     ConstraintEvaluator &eval = bdds->get_ce();
 
-    send_json(dds, eval, dhi, false);
-}
-
-/** @brief The send_json() method transmits both data and metadata responses.
- *
- * @note Used for unit tests.
- * @param dds The DDS to transform into JSON
- * @param ce the constraint evaluator to use to mark the variables.
- * @param dhi The data interface containing information about the current
- * request.
- * @param sendData If the sendData parameter is true data will be
- * sent. If sendData is false then the metadata will be sent.
- */
-void FoW10nJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData)
-{
-    string ncVersion = dhi.data[RETURN_CMD] ;
-
     ostream &o_strm = dhi.get_output_stream();
-    if (!o_strm) {
-        string err = (string) "Output stream is not set, can not return as JSON";
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
+    if (!o_strm)
+        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
 
     // ticket 1248 jhrg 2/23/09
     string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
@@ -201,35 +250,15 @@ void FoW10nJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDa
         eval.parse_constraint(ce, *dds);
     }
     catch (Error &e) {
-        string em = e.get_error_message();
-        string err = "Failed to parse the constraint expression: " + em;
-        throw BESInternalError(err, __FILE__, __LINE__);
+        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
     }
     catch (...) {
-        string err = (string) "Failed to parse the constraint expression: " + "Unknown exception caught";
-        throw BESInternalError(err, __FILE__, __LINE__);
+        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
     }
-
-    // The dataset_name is no longer used in the constraint evaluator, so no
-    // need to get here. Plus, just getting the first containers dataset
-    // name would not have worked with multiple containers.
-    // pwest Jan 4, 2009
-    string dataset_name = "";
 
     // now we need to read the data
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - reading data into DataDDS" << endl);
 
-    // I removed the functional_constraint bool and the (dead) code that used it.
-    // This kind of temporary object should use auto_ptr<>, but in this case it
-    // seems like it's not a supported feature of the handler. 12.27.2011 jhrg
-
-#define FUNCTIONAL_CE_SUPPORTED 0
-#if FUNCTIONAL_CE_SUPPORTED
-    // This is used to record whether this is a functional CE or not. If so,
-    // the code allocates a new DDS object to hold the BaseType returned by
-    // the function and we need to delete that DDS before exiting this code.
-    bool functional_constraint = false;
-#endif
     try {
         // Handle *functional* constraint expressions specially
         if (eval.function_clauses()) {
@@ -238,133 +267,61 @@ void FoW10nJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDa
             delete dds;
             dds = tmp_dds;
         }
-#if FUNCTIONAL_CE_SUPPORTED
-        if( eval.functional_expression() )
-        {
-            // This returns a new BaseType, not a pointer to one in the DataDDS
-            // So once the data has been read using this var create a new
-            // DataDDS and add this new var to the it.
-            BaseType *var = eval).eval_function( *dds, dataset_name );
-            if (!var)
-            throw Error(unknown_error, "Error calling the CE function.");
-
-            var->read( );
-
-            dds = new DataDDS( NULL, "virtual" );
-            // Set 'functional_constraint' here so that below we know that if
-            // it's true we must delete 'dds'.
-            functional_constraint = true;
-            dds->add_var( var );
-        }
-#endif
-        else
-        {
+        else {
             // Iterate through the variables in the DataDDS and read
             // in the data if the variable has the send flag set.
-
-            // Note the special case for Sequence. The
-            // transfer_data() method uses the same logic as
-            // serialize() to read values but transfers them to the
-            // d_values field instead of writing them to a XDR sink
-            // pointer. jhrg 9/13/06
             for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
                 if ((*i)->send_p()) {
-                    // FIXME: we don't have sequences in netcdf so let's not
-                    // worry about that right now.
                     (*i)->intern_data(eval, *dds);
                 }
-
             }
         }
     }
     catch (Error &e) {
-#if FUNCTIONAL_CE_SUPPORTED
-        if (functional_constraint)
-        delete dds;
-#endif
-        string em = e.get_error_message();
-        string err = "Failed to read data: " + em;
-        throw BESInternalError(err, __FILE__, __LINE__);
+        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
     }
     catch (...) {
-#if FUNCTIONAL_CE_SUPPORTED
-        if (functional_constraint)
-        delete dds;
-#endif
-        string err = "Failed to read data: Unknown exception caught";
-        throw BESInternalError(err, __FILE__, __LINE__);
+        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
 
     string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
-    char *temp_full = new char[temp_file_name.length() + 1];
-    string::size_type len = temp_file_name.copy(temp_full, temp_file_name.length());
-    *(temp_full + len) = '\0';
+    vector<char> temp_full(temp_file_name.length() + 1);
+    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
+    temp_full[len] = '\0';
     // cover the case where older versions of mkstemp() create the file using
     // a mode of 666.
     mode_t original_mode = umask(077);
-    int fd = mkstemp(temp_full);
+    int fd = mkstemp(&temp_full[0]);
+    // If we keep the temp files, it can be unliked here. jhrg 7/31/14
     umask(original_mode);
 
-
-    if (fd == -1) {
-        delete[] temp_full;
-#if FUNCTIONAL_CE_SUPPORTED
-        if (functional_constraint)
-        delete dds;
-#endif
-        string err = string("Failed to open the temporary file: ") + temp_file_name;
-        throw BESInternalError(err, __FILE__, __LINE__);
-    }
+    if (fd == -1)
+        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
 
     // transform the OPeNDAP DataDDS to the netcdf file
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << temp_full << endl);
+    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
 
     try {
+        FoW10nJsonTransform ft(dds, dhi, &temp_full[0]);
 
+        ft.transform( false /* send metadata only */ );
 
-
-//        FoJsonTransform ft(dds, dhi, temp_full);
-        BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - Building JSON Transformer. " << endl);
-        FoW10nJsonTransform ft(dds, dhi, temp_full);
-
-
-        BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - Transforming. sendData: "<< sendData << endl);
-
-        ft.transform( sendData );
-
-        BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transmitting temp file " << temp_full << endl);
-        FoW10nJsonTransmitter::return_temp_stream(temp_full, o_strm, ncVersion);
-
+        FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
     catch (BESError &e) {
         close(fd);
-        (void) unlink(temp_full);
-        delete[] temp_full;
-#if FUNCTIONAL_CE_SUPPORTED
-        if (functional_constraint)
-        delete dds;
-#endif
+        (void) unlink(&temp_full[0]);
         throw;
     }
     catch (...) {
         close(fd);
-        (void) unlink(temp_full);
-        delete[] temp_full;
-#if FUNCTIONAL_CE_SUPPORTED
-        if (functional_constraint)
-        delete dds;
-#endif
-        string err = (string) "fileout_json: Failed to transform to JSON, unknown error";
-        throw BESInternalError(err, __FILE__, __LINE__);
+        (void) unlink(&temp_full[0]);
+        throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
 
     close(fd);
-    (void) unlink(temp_full);
-    delete[] temp_full;
-#if FUNCTIONAL_CE_SUPPORTED
-    if (functional_constraint)
-    delete dds;
-#endif
+    (void) unlink(&temp_full[0]);
+
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
@@ -377,9 +334,7 @@ void FoW10nJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDa
  * @param strm C++ ostream to write the contents of the file to
  * @throws BESInternalError if problem opening the file
  */
-void FoW10nJsonTransmitter::return_temp_stream(const string &filename,
-					 ostream &strm,
-					 const string &ncVersion)
+void FoW10nJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
 {
     //  int bytes = 0 ;    // Not used; jhrg 3/16/11
     ifstream os;
@@ -395,24 +350,6 @@ void FoW10nJsonTransmitter::return_temp_stream(const string &filename,
     os.read(block, sizeof block);
     nbytes = os.gcount();
     if (nbytes > 0) {
-#if 0
-        bool found = false;
-        string context = "transmit_protocol";
-        string protocol = BESContextManager::TheManager()->get_context(context, found);
-        if (protocol == "HTTP") {
-            strm << "HTTP/1.0 200 OK\n";
-            strm << "Content-type: application/octet-stream\n";
-            strm << "Content-Description: " << "BES dataset" << "\n";
-            if ( ncVersion == RETURNAS_NETCDF4 ) {
-            	strm << "Content-Disposition: filename=" << filename << ".nc4;\n\n";
-            }
-            else {
-            	strm << "Content-Disposition: filename=" << filename << ".nc;\n\n";
-            }
-            strm << flush;
-        }
-#endif
-
         strm.write(block, nbytes);
         //bytes += nbytes ;
     }

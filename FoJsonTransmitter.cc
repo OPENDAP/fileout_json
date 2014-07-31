@@ -100,48 +100,17 @@ FoJsonTransmitter::FoJsonTransmitter() :
     }
 }
 
-#if 0
 /** @brief The static method registered to transmit OPeNDAP data objects as
  * a JSON file.
  *
- * This function takes the OPeNDAP DataDDS object, reads in the data (can be
- * used with any data handler), transforms the data into a JSON file, and
+ * This function takes the OPeNDAP DDS object, reads in the metadata (can be
+ * used with any data handler), transforms the metadata into a JSON file, and
  * streams back that JSON file back to the requester using the stream
  * specified in the BESDataHandlerInterface.
  *
- * @param obj The BESResponseObject containing the OPeNDAP DataDDS object
- * @param dhi BESDataHandlerInterface containing information about the
- * request and response
- * @throws BESInternalError if the response is not an OPeNDAP DataDDS or if
- * there are any problems reading the data, writing to a JSON file, or
- * streaming the JSON file
- */
-void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
-{
-    BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
-    if (!bdds) {
-        throw BESInternalError("Cast to BESDDSResponse error.", __FILE__, __LINE__);
-    }
-
-    DDS *dds = bdds->get_dds();
-    if (!dds)
-        throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
-
-    BESDEBUG("fojson", "FoJsonTransmitter::send_metadata - parsing the constraint" << endl);
-
-    ConstraintEvaluator &eval = bdds->get_ce();
-
-    send_json(dds, eval, dhi, false);
-}
-#endif
-
-/** @brief The static method registered to transmit OPeNDAP data objects as
- * a JSON file.
- *
- * This function takes the OPeNDAP DataDDS object, reads in the data (can be
- * used with any data handler), transforms the data into a JSON file, and
- * streams back that JSON file back to the requester using the stream
- * specified in the BESDataHandlerInterface.
+ * @note This static method differs from the send_data() method in that it
+ * expects the BESResponseObject to be a DDS and not a DataDDS. This distinction
+ * is somewhat bogus as of libdap 3.13, but the two different classes do exist.
  *
  * @param obj The BESResponseObject containing the OPeNDAP DataDDS object
  * @param dhi BESDataHandlerInterface containing information about the
@@ -200,7 +169,6 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
                 if ((*i)->send_p()) {
                     (*i)->intern_data(eval, *dds);
                 }
-
             }
         }
     }
@@ -252,7 +220,7 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
 }
 
 
-    /** @brief The static method registered to transmit OPeNDAP data objects as
+/** @brief The static method registered to transmit OPeNDAP data objects as
  * a JSON file.
  *
  * This function takes the OPeNDAP DataDDS object, reads in the data (can be
