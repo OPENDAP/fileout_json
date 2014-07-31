@@ -71,9 +71,7 @@ private:
     void transform(std::ostream *strm, libdap::Structure *s,string indent, bool sendData );
     void transform(std::ostream *strm, libdap::Grid *g, string indent, bool sendData);
     void transform(std::ostream *strm, libdap::Sequence *s, string indent, bool sendData);
-
     void transform(std::ostream *strm, libdap::Array *a, string indent, bool sendData);
-
     void transform(std::ostream *strm, libdap::AttrTable &attr_table, string  indent);
 
 public:
@@ -83,7 +81,6 @@ public:
 	virtual void transform(bool sendData);
 
 	virtual void dump(std::ostream &strm) const;
-
 };
 
 #endif // FoJsonTransfrom_h_

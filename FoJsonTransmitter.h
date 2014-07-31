@@ -26,7 +26,6 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
 #ifndef A_FoJsonTransmitter_h
 #define A_FoJsonTransmitter_h 1
 
@@ -39,7 +38,6 @@ class BESContainer;
 
 using namespace libdap;
 
-
 /** @brief BESTransmitter class named "json" that transmits an OPeNDAP
  * data object as a JSON file
  *
@@ -51,25 +49,17 @@ using namespace libdap;
  */
 class FoJsonTransmitter: public BESBasicTransmitter {
 private:
-    static void return_temp_stream(const string &filename,
-				   ostream &strm,
-				   const string &ncVersion);
-    static string temp_dir;
+	static string temp_dir;
 
-
-
+	static void return_temp_stream(const string &filename, ostream &strm);
 
 public:
-    FoJsonTransmitter();
-    virtual ~FoJsonTransmitter()
-    {
-    }
+	FoJsonTransmitter();
+	virtual ~FoJsonTransmitter() { }
 
-    static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
-
+	static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
+	static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
+	// static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
 #endif // A_FoJsonTransmitter_h
-

@@ -234,7 +234,9 @@ void FoW10nJsonTransmitter::send_json(DDS *dds, ConstraintEvaluator &eval, BESDa
         // Handle *functional* constraint expressions specially
         if (eval.function_clauses()) {
             BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
-            dds = eval.eval_function_clauses(*dds);
+            DDS *tmp_dds = eval.eval_function_clauses(*dds);
+            delete dds;
+            dds = tmp_dds;
         }
 #if FUNCTIONAL_CE_SUPPORTED
         if( eval.functional_expression() )
