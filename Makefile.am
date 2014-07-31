@@ -4,7 +4,7 @@
 # 06/23/14 ndp
 #
 
-AUTOMAKE_OPTIONS = foreign check-news
+AUTOMAKE_OPTIONS = foreign check-news subdir-objects
 
 ACLOCAL_AMFLAGS = -I conf
 
@@ -25,7 +25,7 @@ FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJ
 FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h \
 	FoW10nJsonTransmitter.h FoW10nJsonTransform.h StreamString.h utils.h
 
-EXTRA_DIST = data COPYRIGHT COPYING fojson.conf.in fileout_json.spec doxy.conf
+EXTRA_DIST = data COPYING fojson.conf.in fileout_json.spec doxy.conf
 
 CLEANFILES = *~ fojson.conf
 

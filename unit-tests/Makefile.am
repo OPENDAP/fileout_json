@@ -1,6 +1,6 @@
 # Tests
 
-AUTOMAKE_OPTIONS = foreign
+AUTOMAKE_OPTIONS = foreign subdir-objects
 
 AM_CPPFLAGS = -I$(top_srcdir) $(BES_CPPFLAGS)
 AM_LDADD = $(BES_DAP_LIBS) 
@@ -18,7 +18,7 @@ DISTCLEANFILES = test_config.h
 
 CLEANFILES = *.dbg *.log
 
-EXTRA_DIST = data baselines test_config.h.in
+EXTRA_DIST = baselines test_config.h.in
 
 check_PROGRAMS = $(UNIT_TESTS)
 
