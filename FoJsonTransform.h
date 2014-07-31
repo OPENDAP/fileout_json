@@ -55,6 +55,8 @@ private:
 	std::string _returnAs;
 	std::string _indent_increment;
 
+	std::ostream *_ostrm;
+
 	template<typename T> unsigned  int json_simple_type_array_worker(std::ostream *strm, T *values, unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim);
 	template<typename T>void json_simple_type_array(ostream *strm, libdap::Array *a, std::string indent, bool sendData);
 
@@ -70,6 +72,8 @@ private:
 
 public:
 	FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
+	FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
+
 	virtual ~FoJsonTransform();
 
 	virtual void transform(bool sendData);

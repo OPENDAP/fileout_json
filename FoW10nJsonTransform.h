@@ -54,6 +54,7 @@ private:
 	std::string _returnAs;
 	std::string _indent_increment;
 
+	std::ostream *_ostrm;
 
 	void writeNodeMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
 	void writeLeafMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
@@ -90,18 +91,11 @@ private:
 
 
 public:
-	/**
-	 * Build a FoJsonTransform object. By default it builds a netcdf 3 file; pass "netcdf-4"
-	 * to get a netcdf 4 file.
-	 *
-	 * @note added default value to fourth param to preserve the older API. 5/6/13 jhrg
-	 * @param dds
-	 * @param dhi
-	 * @param localfile
-	 * @param netcdfVersion
-	 */
+
     FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
+    FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
 	virtual ~FoW10nJsonTransform();
+
 	virtual void transform(bool sendData);
 
 	virtual void dump(std::ostream &strm) const;

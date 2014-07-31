@@ -169,7 +169,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
-
+#if 0
     string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
     vector<char> temp_full(temp_file_name.length() + 1);
     string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
@@ -186,28 +186,32 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
 
     // transform the OPeNDAP DataDDS to the netcdf file
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
-
+#endif
     try {
-        FoW10nJsonTransform ft(dds, dhi, &temp_full[0]);
+        FoW10nJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
 
         ft.transform( true /* send data too */ );
 
-        FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
+        //FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
+#if 0
     catch (BESError &e) {
         close(fd);
         (void) unlink(&temp_full[0]);
         throw;
     }
+#endif
     catch (...) {
-        close(fd);
+#if 0
+    	close(fd);
         (void) unlink(&temp_full[0]);
+#endif
         throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
-
+#if 0
     close(fd);
     (void) unlink(&temp_full[0]);
-
+#endif
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
@@ -283,7 +287,7 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
-
+#if 0
     string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
     vector<char> temp_full(temp_file_name.length() + 1);
     string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
@@ -300,28 +304,34 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
 
     // transform the OPeNDAP DataDDS to the netcdf file
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
+#endif
 
     try {
-        FoW10nJsonTransform ft(dds, dhi, &temp_full[0]);
+        FoW10nJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
 
         ft.transform( false /* send metadata only */ );
 
-        FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
+        // FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
+#if o
     catch (BESError &e) {
         close(fd);
         (void) unlink(&temp_full[0]);
         throw;
     }
+#endif
     catch (...) {
-        close(fd);
+#if 0
+    	close(fd);
         (void) unlink(&temp_full[0]);
+#endif
         throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
 
+#if 0
     close(fd);
     (void) unlink(&temp_full[0]);
-
+#endif
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 

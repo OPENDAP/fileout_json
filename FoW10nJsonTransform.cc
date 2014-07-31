@@ -53,12 +53,9 @@ using std::istringstream;
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
-
 #include <utils.h>
 
-
 #define FoW10nJsonTransform_debug_key "fojson"
-
 
 /**
  * Returns the correct w10n type for the passed instance of a DAP type.
@@ -297,20 +294,23 @@ void FoW10nJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt,
  * file is not specified or failed to create the netcdf file
  */
 FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
-        _dds(0),
-        _indent_increment("  ")
+        _dds(dds), _localfile(localfile), _indent_increment("  "), _ostrm(0)
 {
-    if (!dds) {
-        string s = (string) "File out JSON, " + "null DDS passed to constructor";
-        throw BESInternalError(s, __FILE__, __LINE__);
-    }
-    if (localfile.empty()) {
-        string s = (string) "File out JSON, " + "empty local file name passed to constructor";
-        throw BESInternalError(s, __FILE__, __LINE__);
-    }
-    _localfile = localfile;
-    _dds = dds;
+    if (!_dds)
+        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
 
+    if (_localfile.empty())
+        throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
+}
+
+FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm) :
+        _dds(dds), _localfile(""), _indent_increment("  "), _ostrm(ostrm)
+{
+    if (!_dds)
+        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
+
+    if (!_ostrm)
+    	throw BESInternalError("File out JSON, null stream pointer passed to constructor", __FILE__, __LINE__);
 }
 
 /** @brief Destructor
@@ -354,20 +354,26 @@ void FoW10nJsonTransform::dump(ostream &strm) const
  */
 void FoW10nJsonTransform::transform(bool sendData)
 {
-    // FoJsonUtils::reset();
+    // used to ensure the _ostrm is closed only when it's a temp file
+	bool used_temp_file = false;
+	fstream temp_file;
 
-    ofstream fileStrm;
-    fileStrm.open (_localfile.c_str());
+	if (!_ostrm) {
+		temp_file.open(_localfile.c_str());
+		_ostrm = &temp_file;
+		used_temp_file = true;
+	}
 
-    try {
-        transform( &fileStrm, _dds,"", sendData);
-    }
-    catch (BESError &e) {
-    	fileStrm.close();
-        throw;
-    }
-    fileStrm.close();
-
+	try {
+		transform(_ostrm, _dds, "", sendData);
+		if (used_temp_file)
+			temp_file.close();
+	}
+	catch (...) {
+		if (used_temp_file)
+			temp_file.close();
+		throw;
+	}
 }
 
 

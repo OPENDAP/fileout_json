@@ -50,12 +50,8 @@
 
 #include <utils.h>
 
-
-
 #define ATTRIBUTE_SEPARATOR "."
 #define JSON_ORIGINAL_NAME "json_original_name"
-
-
 
 #define FoJsonTransform_debug_key "fojson"
 
@@ -148,22 +144,32 @@ template<typename T>void FoJsonTransform::json_simple_type_array(std::ostream *s
  * file is not specified or failed to create the netcdf file
  */
 FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
-        _dds(0),
-        _indent_increment(" ")
+        _dds(dds),  _localfile(localfile), _indent_increment(" "), _ostrm(0)
 {
-    if (!dds) {
-        string s = (string) "File out JSON, " + "null DDS passed to constructor";
-        throw BESInternalError(s, __FILE__, __LINE__);
-    }
-    if (localfile.empty()) {
-        string s = (string) "File out JSON, " + "empty local file name passed to constructor";
-        throw BESInternalError(s, __FILE__, __LINE__);
-    }
-    _localfile = localfile;
-    _dds = dds;
-
-    // FoJsonUtils::name_prefix = "json_";
+    if (!_dds)
+        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
+    if (_localfile.empty())
+        throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
 }
+
+/** @brief Constructor that creates transformation object from the specified
+ * DataDDS object to the specified stream.
+ *
+ * Using this constructor configures the Transform object to write directly to
+ * the DataHandlerInterface's output stream without using an intermediate
+ * file.
+ *
+ * @param dds
+ * @param dhi
+ * @param ostrm
+ */
+FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm) :
+        _dds(dds),  _localfile(""), _indent_increment(" "), _ostrm(ostrm)
+{
+    if (!_dds)
+        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
+}
+
 
 /** @brief Destructor
  *
@@ -193,32 +199,42 @@ void FoJsonTransform::dump(std::ostream &strm) const
     BESIndent::UnIndent();
 }
 
-
-
-
 /** @brief Transforms the DDS object into a JSON instance object representation.
  *
  * Transforms the DDS and all of it's "projected" variables into a JSON document using
  * an instance object representation.
+ *
+ * Modified from the original so that the object can be built using either an output
+ * stream or a local temporary file. In the latter case it will open the file and
+ * write to it. The object's client sorts it out from there...
+ *
  * @param sendData If the sendData parameter is true data will be
  * sent. If sendData is false then the metadata will be sent.
  */
 void FoJsonTransform::transform(bool sendData)
 {
-    // FoJsonUtils::reset();
+    // used to ensure the _ostrm is closed only when it's a temp file
+	bool used_temp_file = false;
+	fstream temp_file;
 
-    ofstream fileStrm;
-    fileStrm.open (_localfile.c_str());
+	// We could factor out the ostream* parameters from all of the methods
+	// if we wanted... jhrg 7/31/14
+	if (!_ostrm) {
+		temp_file.open(_localfile.c_str());
+		_ostrm = &temp_file;
+		used_temp_file = true;
+	}
 
-    try {
-        transform( &fileStrm, _dds,"", sendData);
-    }
-    catch (BESError &e) {
-    	fileStrm.close();
-        throw;
-    }
-    fileStrm.close();
-
+	try {
+		transform(_ostrm, _dds, "", sendData);
+		if (used_temp_file)
+			temp_file.close();
+	}
+	catch (...) {
+		if (used_temp_file)
+			temp_file.close();
+		throw;
+	}
 }
 
 
@@ -236,14 +252,10 @@ void FoJsonTransform::transform(bool sendData)
  */
 void FoJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string indent, bool sendData){
 
-
 	bool sentSomething = false;
-
 
 	// Open returned JSON object
 	*strm << "{" << endl;
-
-
 
 	// Name object
 	*strm << indent + _indent_increment << "\"name\": \"" << dds->get_dataset_name() << "\"," << endl;
