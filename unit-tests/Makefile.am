@@ -1,6 +1,6 @@
 # Tests
 
-AUTOMAKE_OPTIONS = foreign subdir-objects
+# AUTOMAKE_OPTIONS = foreign subdir-objects
 
 AM_CPPFLAGS = -I$(top_srcdir) $(BES_CPPFLAGS)
 AM_LDADD = $(BES_DAP_LIBS) 

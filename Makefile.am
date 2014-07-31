@@ -4,12 +4,19 @@
 # 06/23/14 ndp
 #
 
-AUTOMAKE_OPTIONS = foreign check-news subdir-objects
+# Now uses AM_INIT_AUTOMAKE(foreign subdir-objects check-news) in
+# configure.ac
+
+# AUTOMAKE_OPTIONS = foreign check-news subdir-objects
 
 ACLOCAL_AMFLAGS = -I conf
 
 SUBDIRS = . unit-tests bes-testsuite
-DIST_SUBDIRS = unit-tests bes-testsuite
+
+# including this line seems to break the distcheck target I'm not sure
+# why, but the error messages say:
+# Makefile:583: .deps/libfojson_module_la-FoJsonModule.Plo: No such file or directory
+# DIST_SUBDIRS =  bes-testsuite unit-tests
 
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libfojson_module.la

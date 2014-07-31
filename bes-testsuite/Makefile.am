@@ -1,5 +1,5 @@
 
-AUTOMAKE_OPTIONS = foreign subdir-objects
+# AUTOMAKE_OPTIONS = foreign subdir-objects
 
 AM_CPPFLAGS = -I$(top_srcdir)
 

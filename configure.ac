@@ -6,7 +6,7 @@ AC_INIT(fileout_json, 0.9.0, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
-AM_INIT_AUTOMAKE(1.10)
+AM_INIT_AUTOMAKE(foreign subdir-objects check-news)
 
 # The handler is a shared object library, so we don't normally need
 # the static lib. Override this default by specifying `--enable-static',
@@ -50,7 +50,7 @@ AC_CHECK_FUNCS([strchr])
 AC_SYS_LARGEFILE
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.11.0],
+AC_CHECK_LIBDAP([3.13.0],
  [
   LIBS="$LIBS $DAP_SERVER_LIBS"
   CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
@@ -76,7 +76,9 @@ NC_BIN=`echo $NC_LDFLAGS | sed 's@^-L\(.*\)/lib@\1/bin@g'`
 AC_MSG_NOTICE([NC_BIN is $NC_BIN])
 AC_SUBST(NC_BIN_PATH, $NC_BIN)
 
-AC_CONFIG_FILES([Makefile unit-tests/Makefile unit-tests/test_config.h bes-testsuite/Makefile bes-testsuite/atlocal] )
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([unit-tests/Makefile unit-tests/test_config.h])
+AC_CONFIG_FILES([bes-testsuite/Makefile bes-testsuite/atlocal])
 AC_CONFIG_TESTDIR(bes-testsuite)
 
 AC_OUTPUT
