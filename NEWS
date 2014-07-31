@@ -1,0 +1,7 @@
+
+Version 0.9
+
+This is the initial version of the handler. It will make to kinds of JSON output.
+
+One representation corresponds to the w10n specification developed by JPL and one
+to a representation developed at CSIRO. See the README for more information.

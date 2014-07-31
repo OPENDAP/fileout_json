@@ -1,0 +1,206 @@
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	I saw that the fileout JSON code does not need to use a temporary
+	file so I modified the Transform objects to take a stram and, if
+	supplied, write to it directly by passing the temporary file step.
+	There were some changes in the Transmitters too, since that's
+	where the temp file was being made.
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	Fixed a leak where server function evaluation failed to free a
+	DDS/DataDDS object. I also cleaned up the tests, eliminating some
+	extra autotest code in the unit-tests directory.
+
+	D    COPYRIGHT
+	M    FoJsonTransform.cc
+	M    FoJsonTransform.h
+	M    FoJsonTransmitter.cc
+	M    FoW10nJsonTransmitter.cc
+	M    FoW10nJsonTransmitter.h
+	M    Makefile.am
+	M    aclocal.m4
+	M    conf/config.guess
+	M    conf/config.sub
+	M    conf/depcomp
+	M    conf/install-sh
+	M    conf/libtool.m4
+	M    conf/ltmain.sh
+	M    conf/ltoptions.m4
+	M    conf/ltversion.m4
+	M    conf/missing
+	M    config.h.in
+	D    package.m4
+	_M   unit-tests
+	D    unit-tests/atlocal.in
+	D    unit-tests/bes.conf.in
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	cleaning... Removed the autotest stuff and modified the Makefile.am to
+	run the unit test iteself.
+
+	M    unit-tests/FoJsonTest.cc
+	M    unit-tests/Makefile.am
+	D    unit-tests/fojson_handlerTest
+	D    unit-tests/fojson_handlerTest.at
+	D    unit-tests/package.m4
+	_M   unit-tests/tmp
+
+2014-07-30  James Gallagher <jgallagher@opendap.org>
+
+	Fixed a memory leak in the FoJsonTransmitter.cc code that was
+	discovered in the BESAsciiTransmit.cc file (see ticket 2240). This
+	is the first shot at a fix - it works but could be improved to use
+	less duplicated code. The w10n output has not been patched yet.
+
+2014-07-24  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Added comments and such to source code.
+
+2014-07-24  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Stopped 'using namespace libdap'
+
+2014-07-24  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Stopped 'using namespace libdap'
+
+2014-07-23  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Made tests for abstract object and instance object output.
+	Tests pass. woot.
+
+2014-07-23  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Adiing files
+
+2014-07-23  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Added second JSON representation, ijson.
+
+2014-07-22  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-22  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-22  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-22  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-22  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Got the copyright sorted on the source files.
+
+2014-07-20  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Restructured json representation of attributes to better represent the DAP data model.
+
+2014-07-19  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: The w10n-esque json response for metadata and data are working.
+
+2014-07-18  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: The w10n-esque json response for metadata and data are working.
+
+2014-07-17  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Removing Makefile.in files from svn
+
+2014-07-17  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Adding new transform that uses (mostly) w10n syntax for the json content.
+
+2014-07-15  Nathan Potter <ndp@coas.oregonstate.edu>
+
+2014-07-03  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-03  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-03  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Passes initial tests. woot.
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Passes initial tests. woot.
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Passes initial tests. woot.
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+2014-07-01  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: team sync
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Fixed bes-testsuite
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson:
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson:
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson:
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: bes-testsuite added.
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson:
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: removing templates - unused.
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fojson: Adding bes tests (not working yet)
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fileout_json: Updated spec file.
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fileout_json: Initial check-in of the fileout JSON response handler thingy.
+
+2014-06-30  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	fileout_json: First check in of the JSON response apparatus.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(fileout_json, 0.0.1, opendap-tech@opendap.org)
+AC_INIT(fileout_json, 0.9.0, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
