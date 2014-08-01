@@ -220,7 +220,9 @@ void FoJsonTransform::transform(bool sendData)
 	// We could factor out the ostream* parameters from all of the methods
 	// if we wanted... jhrg 7/31/14
 	if (!_ostrm) {
-		temp_file.open(_localfile.c_str());
+		temp_file.open(_localfile.c_str(), std::fstream::out);
+		if (!temp_file)
+			throw BESInternalError("Could not open temp file: " + _localfile, __FILE__, __LINE__);
 		_ostrm = &temp_file;
 		used_temp_file = true;
 	}

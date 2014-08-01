@@ -69,6 +69,8 @@ private:
 	{
 	    ifstream is;
 	    is.open (fn.c_str(), ios::binary );
+	    if (!is || is.eof())
+	    	return "";
 
 	    // get length of file:
 	    is.seekg (0, ios::end);
@@ -152,7 +154,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_METADATA.json.baseline");
             string result   = fileToString(tmpFile);
-            libdap::ConstraintEvaluator ce;
+            //libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_abstract_object_metadata_representation() - result: " << endl << result << endl);
@@ -169,8 +171,11 @@ public:
         	DBG(cerr << " FoJsonTest::test_abstract_object_metadata_representation() - END" << endl);
             CPPUNIT_ASSERT(true);
 
-        } catch (std::string &e) {
-            cerr << "Error: " << e << endl;
+        } catch (BESInternalError &e) {
+            cerr << "BESInternalError: " << e.get_message() << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (libdap::Error &e) {
+            cerr << "Error: " << e.get_error_message() << endl;
             CPPUNIT_ASSERT(false);
         } catch (...) {
             cerr << "Unknown Error." << endl;
@@ -207,7 +212,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/abstract_object_test_DATA.json.baseline");
             string result   = fileToString(tmpFile);
-            libdap::ConstraintEvaluator ce;
+            //libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_abstract_object_data_representation() - result: " << endl << result << endl);
@@ -224,8 +229,11 @@ public:
         	DBG(cerr << " FoJsonTest::test_abstract_object_data_representation() - END" << endl);
             CPPUNIT_ASSERT(true);
 
-        } catch (std::string &e) {
-            cerr << "Error: " << e << endl;
+        } catch (BESInternalError &e) {
+            cerr << "BESInternalError: " << e.get_message() << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (libdap::Error &e) {
+            cerr << "Error: " << e.get_error_message() << endl;
             CPPUNIT_ASSERT(false);
         } catch (...) {
             cerr << "Unknown Error." << endl;
@@ -263,7 +271,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_METADATA.json.baseline");
             string result   = fileToString(tmpFile);
-            libdap::ConstraintEvaluator ce;
+            //libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - result: " << endl << result << endl);
@@ -279,8 +287,11 @@ public:
         	DBG(cerr << " FoJsonTest::test_instance_object_metadata_representation() - END" << endl);
             CPPUNIT_ASSERT(true);
 
-        } catch (std::string &e) {
-            cerr << "Error: " << e << endl;
+        } catch (BESInternalError &e) {
+            cerr << "BESInternalError: " << e.get_message() << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (libdap::Error &e) {
+            cerr << "Error: " << e.get_error_message() << endl;
             CPPUNIT_ASSERT(false);
         } catch (...) {
             cerr << "Unknown Error." << endl;
@@ -319,7 +330,7 @@ public:
             // Compare the result with the baseline file.
             string baseline = fileToString((string) TEST_SRC_DIR + "/baselines/instance_object_test_DATA.json.baseline");
             string result   = fileToString(tmpFile);
-            libdap::ConstraintEvaluator ce;
+            //libdap::ConstraintEvaluator ce;
 
             DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - baseline: " << endl << baseline << endl);
             DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - result: " << endl << result << endl);
@@ -338,8 +349,11 @@ public:
         	DBG(cerr << " FoJsonTest::test_instance_object_data_representation() - END" << endl);
             CPPUNIT_ASSERT(true);
 
-        } catch (std::string &e) {
-            cerr << "Error: " << e << endl;
+        } catch (BESInternalError &e) {
+            cerr << "BESInternalError: " << e.get_message() << endl;
+            CPPUNIT_ASSERT(false);
+        } catch (libdap::Error &e) {
+            cerr << "Error: " << e.get_error_message() << endl;
             CPPUNIT_ASSERT(false);
         } catch (...) {
             cerr << "Unknown Error." << endl;
