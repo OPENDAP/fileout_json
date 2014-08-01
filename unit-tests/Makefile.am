@@ -16,9 +16,9 @@ TEST_COV_FLAGS = -ftest-coverage -fprofile-arcs
 
 DISTCLEANFILES = test_config.h
 
-CLEANFILES = *.dbg *.log
+CLEANFILES = *.dbg *.log tmp/*
 
-EXTRA_DIST = baselines test_config.h.in
+EXTRA_DIST = baselines test_config.h.in tmp
 
 check_PROGRAMS = $(UNIT_TESTS)
 

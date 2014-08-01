@@ -359,7 +359,9 @@ void FoW10nJsonTransform::transform(bool sendData)
 	fstream temp_file;
 
 	if (!_ostrm) {
-		temp_file.open(_localfile.c_str());
+		temp_file.open(_localfile.c_str(), std::fstream::out);
+		if (!temp_file)
+			throw BESInternalError("Could not open temp file: " + _localfile, __FILE__, __LINE__);
 		_ostrm = &temp_file;
 		used_temp_file = true;
 	}
