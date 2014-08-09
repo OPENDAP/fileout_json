@@ -1,3 +1,126 @@
+2014-08-08  James Gallagher <jgallagher@opendap.org>
+
+	Removed old code and fixed a typo that introduced a double-free bug.
+
+2014-08-01  James Gallagher <jgallagher@opendap.org>
+
+	changes that parallel ones made on the h 1.9 release branch -
+	simpler to make them in both places than go through the whole
+	merge process.
+
+2014-08-01  James Gallagher <jgallagher@opendap.org>
+
+	Yup, found a bug in the test code...
+
+2014-08-01  James Gallagher <jgallagher@opendap.org>
+
+	Release 0.9.0 checklist
+
+	M    ChangeLog
+	M    configure.ac
+	M    fileout_json.spec
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	svn ignores
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	Hmmm. Putting unit-tests in DIST_SUBDIRS breaks (or seems to be
+	the cause of the break) distcheck.
+
+	M    Makefile.am
+	M    bes-testsuite/Makefile.am
+	M    bes-testsuite/fileout_jsonTest.at
+	M    configure.ac
+	M    unit-tests/Makefile.am
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	Checkpoint on the way to getting distcheck working
+
+	M    Makefile.am
+	M    NEWS
+	M    bes-testsuite/Makefile.am
+	M    bes-testsuite/package.m4
+	M    configure.ac
+	M    unit-tests/Makefile.am
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	On the way to a source dist...
+
+	M    ChangeLog
+	M    INSTALL
+	M    NEWS
+	D    conf/config.guess
+	D    conf/config.sub
+	D    conf/depcomp
+	D    conf/foo
+	D    conf/install-sh
+	D    conf/libtool.m4
+	D    conf/ltmain.sh
+	D    conf/ltoptions.m4
+	D    conf/ltsugar.m4
+	D    conf/ltversion.m4
+	D    conf/lt~obsolete.m4
+	D    conf/missing
+	D    conf/netcdf.m4
+	D    conf/netcdf_header.m4
+	M    configure.ac
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	I saw that the fileout JSON code does not need to use a temporary file so I modified the Transform objects to take a stram and, if supplied, write to it directly by passing the temporary file step. There were some changes in the Transmitters too, since that's where the temp file was being made.
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	Fixed a leak where server function evaluation failed to free a DDS/DataDDS
+	object. I also cleaned up the tests, eliminating some extra autotest code
+	in the unit-tests directory.
+
+	D    COPYRIGHT
+	M    FoJsonTransform.cc
+	M    FoJsonTransform.h
+	M    FoJsonTransmitter.cc
+	M    FoW10nJsonTransmitter.cc
+	M    FoW10nJsonTransmitter.h
+	M    Makefile.am
+	M    aclocal.m4
+	M    conf/config.guess
+	M    conf/config.sub
+	M    conf/depcomp
+	M    conf/install-sh
+	M    conf/libtool.m4
+	M    conf/ltmain.sh
+	M    conf/ltoptions.m4
+	M    conf/ltversion.m4
+	M    conf/missing
+	M    config.h.in
+	D    package.m4
+	_M   unit-tests
+	D    unit-tests/atlocal.in
+	D    unit-tests/bes.conf.in
+
+2014-07-31  James Gallagher <jgallagher@opendap.org>
+
+	cleaning... Removed the autotest stuff and modified the Makefile.am to
+	run the unit test iteself.
+
+	M    unit-tests/FoJsonTest.cc
+	M    unit-tests/Makefile.am
+	D    unit-tests/fojson_handlerTest
+	D    unit-tests/fojson_handlerTest.at
+	D    unit-tests/package.m4
+	_M   unit-tests/tmp
+
+2014-07-30  James Gallagher <jgallagher@opendap.org>
+
+	Fixed a memory leak in the FoJsonTransmitter.cc code that was discovered in the BESAsciiTransmit.cc file (see ticket 2240). This is the first shot at a fix - it works but could be improved to use less duplicated code. The w10n output has not been patched yet.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2014-07-31  James Gallagher <jgallagher@opendap.org>
 
 	svn ignores
