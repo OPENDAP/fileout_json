@@ -1,6 +1,6 @@
 Summary: Return a JSON File for a DAP Data response
 Name: fileout_json
-Version: 0.9.0
+Version: 0.9.1
 Release: 1
 License: LGPLv2+
 Group: System Environment/Daemons

@@ -179,48 +179,18 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
 
-#if 0
-    string temp_file_name = FoJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
-    vector<char> temp_full(temp_file_name.length() + 1);
-    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
-    temp_full[len] = '\0';
-
-    // cover the case where older versions of mkstemp() create the file using
-    // a mode of 666.
-    mode_t original_mode = umask(077);
-    int fd = mkstemp(&temp_full[0]);
-    umask(original_mode);
-    if (fd == -1)
-        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
-
-    // transform the OPeNDAP DataDDS to the netcdf file
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
-#endif
     try {
-        FoJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
+        FoJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( false /* do not send data */ );
-
-        // FoJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
     catch (BESError &e) {
-#if 0
-    	close(fd);
-        (void) unlink(&temp_full[0]);
-#endif
         throw;
     }
     catch (...) {
-#if 0
-    	close(fd);
-        (void) unlink(&temp_full[0]);
-#endif
         throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
-#if 0
-    close(fd);
-    (void) unlink(&temp_full[0]);
-#endif
+
     BESDEBUG("fojson", "FoJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 

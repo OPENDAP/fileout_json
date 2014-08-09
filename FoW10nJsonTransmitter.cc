@@ -150,6 +150,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
         if (eval.function_clauses()) {
             BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
             DataDDS *tmp_dds = eval.eval_function_clauses(*dds);
+            bdds->set_dds(tmp_dds);
             delete dds;
             dds = tmp_dds;
         }
@@ -169,49 +170,19 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
-#if 0
-    string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
-    vector<char> temp_full(temp_file_name.length() + 1);
-    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
-    temp_full[len] = '\0';
-    // cover the case where older versions of mkstemp() create the file using
-    // a mode of 666.
-    mode_t original_mode = umask(077);
-    int fd = mkstemp(&temp_full[0]);
-    // If we keep the temp files, it can be unliked here. jhrg 7/31/14
-    umask(original_mode);
 
-    if (fd == -1)
-        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
-
-    // transform the OPeNDAP DataDDS to the netcdf file
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
-#endif
     try {
-        FoW10nJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
+        FoW10nJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( true /* send data too */ );
-
-        //FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
-#if 0
     catch (BESError &e) {
-        close(fd);
-        (void) unlink(&temp_full[0]);
         throw;
     }
-#endif
     catch (...) {
-#if 0
-    	close(fd);
-        (void) unlink(&temp_full[0]);
-#endif
         throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
-#if 0
-    close(fd);
-    (void) unlink(&temp_full[0]);
-#endif
+
     BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 

@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.69)
-AC_INIT(fileout_json, 0.9.0, opendap-tech@opendap.org)
+AC_INIT(fileout_json, 0.9.1, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
-AM_INIT_AUTOMAKE(foreign subdir-objects check-news)
+AM_INIT_AUTOMAKE([foreign subdir-objects check-news])
 
 # The handler is a shared object library, so we don't normally need
 # the static lib. Override this default by specifying `--enable-static',
