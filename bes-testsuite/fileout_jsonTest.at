@@ -25,7 +25,7 @@ AT_CLEANUP])
 
 
 m4_define([AT_BESCMD_RESPONSE_TEST],
-[_AT_BESCMD_TEST([$abs_top_srcdir/bes-testsuite/json/$1], [$abs_top_srcdir/bes-testsuite/json/$1.baseline])
+[_AT_BESCMD_TEST([$abs_srcdir/json/$1], [$abs_srcdir/json/$1.baseline])
 ])
 
 

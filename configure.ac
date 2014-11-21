@@ -8,6 +8,8 @@ AC_CONFIG_MACRO_DIR([conf])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects check-news])
 
+AM_CONDITIONAL([DAP_MODULES], [false])
+
 # The handler is a shared object library, so we don't normally need
 # the static lib. Override this default by specifying `--enable-static',
 # which can make running unit tests with valgrind far more pleasant. 
@@ -79,6 +81,8 @@ AC_SUBST(NC_BIN_PATH, $NC_BIN)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([unit-tests/Makefile unit-tests/test_config.h])
 AC_CONFIG_FILES([bes-testsuite/Makefile bes-testsuite/atlocal])
+AC_CONFIG_FILES([bes-testsuite/bes.conf:bes-testsuite/bes.conf.in])
+
 AC_CONFIG_TESTDIR(bes-testsuite)
 
 AC_OUTPUT

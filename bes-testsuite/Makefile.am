@@ -1,10 +1,14 @@
 
-# AUTOMAKE_OPTIONS = foreign subdir-objects
+AUTOMAKE_OPTIONS = foreign
 
+if DAP_MODULES
+AM_CPPFLAGS = -I$(top_srcdir)/dispatch -I$(top_srcdir)/dap \
+-I$(top_srcdir)/modules/fileout_json $(DAP_CFLAGS)
+LIBADD = $(DAP_SERVER_LIBS) $(DAP_CLIENT_LIBS)
+else
 AM_CPPFLAGS = -I$(top_srcdir)
-
-# AM_CPPFLAGS =
-AM_CXXFLAGS =
+LIBADD = $(BES_DAP_LIBS)
+endif
 
 # These are not used by automake but are often useful for certain types of
 # debugging. The best way to use these is to run configure as:
@@ -21,21 +25,10 @@ EXTRA_DIST = json fileout_jsonTest.at $(TESTSUITE) atlocal.in $(srcdir)/package.
 
 DISTCLEANFILES = bes.conf
 
-bes.conf: bes.conf.in ../config.status
-	@my_topdir=`echo ${abs_top_srcdir} | sed 's/\(.*\)\/\(.[^\/]*\)\/\.\./\1/g'`; \
-	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
-		-e "s%[@]modulesdir[@]%${BES_MODULE_DIR}%" \
-		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
-		-e "s%[@]libdir[@]%${libdir}%" \
-		-e "s%[@]datadir[@]%${datadir}%" \
-		-e "s%[@]abs_top_srcdir[@]%$$my_topdir%" \
-		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
-		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
-
 ############## Autotest follows #####################
 
 AUTOM4TE = autom4te
- 
+
 TESTSUITE = $(srcdir)/fileout_jsonTest
 
 check-local: atlocal $(TESTSUITE)

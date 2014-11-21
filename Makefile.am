@@ -4,27 +4,26 @@
 # 06/23/14 ndp
 #
 
-# Now uses AM_INIT_AUTOMAKE(foreign subdir-objects check-news) in
-# configure.ac
-
-# AUTOMAKE_OPTIONS = foreign check-news subdir-objects
+AUTOMAKE_OPTIONS = foreign
 
 ACLOCAL_AMFLAGS = -I conf
 
-SUBDIRS = . unit-tests bes-testsuite
+if DAP_MODULES
+AM_CPPFLAGS = -I$(top_srcdir)/dispatch -I$(top_srcdir)/dap $(DAP_CFLAGS)
+LIBADD = $(DAP_SERVER_LIBS) $(DAP_CLIENT_LIBS)
+else
+AM_CPPFLAGS = $(BES_CPPFLAGS) # or wahtever was set here or in ..._CPPFLAGS
+LIBADD = $(BES_DAP_LIBS)      # and ..._LIBADD
+endif
 
-# including this line seems to break the distcheck target I'm not sure
-# why, but the error messages say:
-# Makefile:583: .deps/libfojson_module_la-FoJsonModule.Plo: No such file or directory
-# DIST_SUBDIRS =  bes-testsuite unit-tests
+SUBDIRS = . unit-tests bes-testsuite
 
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libfojson_module.la
 
 libfojson_module_la_SOURCES = $(FOJSON_SRC) $(FOJSON_HDR)
-libfojson_module_la_CPPFLAGS = $(BES_CPPFLAGS)
 libfojson_module_la_LDFLAGS = -avoid-version -module 
-libfojson_module_la_LIBADD = $(BES_DAP_LIBS)
+libfojson_module_la_LIBADD = $(LIBADD)
 
 FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc \
 	FoW10nJsonTransmitter.cc FoW10nJsonTransform.cc StreamString.cc utils.cc
