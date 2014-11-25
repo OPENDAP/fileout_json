@@ -45,7 +45,7 @@ install-data-local: fojson.conf
 uninstall-local:
 	rm -f $(DESTDIR)$(sysconfdir)/bes/modules/fojson.conf
 
-fojson.conf: fojson.conf.in config.status
+fojson.conf: fojson.conf.in $(top_srcdir)/config.status
 	sed -e "s%[@]bes_modules_dir[@]%${lib_besdir}%" $< > fojson.conf
 
 # Not nearly as clean as it could be, but this removes .svn directories
