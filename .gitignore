@@ -44,11 +44,12 @@ libtool
 atconfig
 atlocal
 
-## libdap specific files
-gl/*.h
+## module  specific files
 
+fojson.conf
+unit-tests/test_config.h
+bes-testsuite/fileout_jsonTest
 bes-testsuite/bes.conf
-bes-testsuite/csv_handlerTest
 bes-testsuite/package.m4
 
 
