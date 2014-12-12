@@ -78,6 +78,13 @@ NC_BIN=`echo $NC_LDFLAGS | sed 's@^-L\(.*\)/lib@\1/bin@g'`
 AC_MSG_NOTICE([NC_BIN is $NC_BIN])
 AC_SUBST(NC_BIN_PATH, $NC_BIN)
 
+## This sets up the special symbols used to build the bes.conf file for
+## the tests. Previously, this was done in the Makefile.am down in the
+## test directory, but building the bes.conf here works better with
+## autoconf overall and esp. with the 'modules' build. jhrg 11/19/14
+modulesdir=$BES_MODULE_DIR
+AC_SUBST(modulesdir)
+
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([unit-tests/Makefile unit-tests/test_config.h])
 AC_CONFIG_FILES([bes-testsuite/Makefile bes-testsuite/atlocal])
