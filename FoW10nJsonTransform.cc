@@ -115,7 +115,7 @@ string getW10nTypeString(libdap::BaseType *bt){
 	case libdap::dods_uint8_c:
 	case libdap::dods_int64_c:
 	case libdap::dods_uint64_c:
-	case libdap::dods_url4_c:
+	// case libdap::dods_url4_c:
 	case libdap::dods_enum_c:
 	case libdap::dods_group_c:
 	{
@@ -550,7 +550,7 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string 
 	case libdap::dods_uint8_c:
 	case libdap::dods_int64_c:
 	case libdap::dods_uint64_c:
-	case libdap::dods_url4_c:
+	// case libdap::dods_url4_c:
 	case libdap::dods_enum_c:
 	case libdap::dods_group_c:
 	{
@@ -699,7 +699,7 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string inde
 	case libdap::dods_uint8_c:
 	case libdap::dods_int64_c:
 	case libdap::dods_uint64_c:
-	case libdap::dods_url4_c:
+	// case libdap::dods_url4_c:
 	case libdap::dods_enum_c:
 	case libdap::dods_group_c:
 	{

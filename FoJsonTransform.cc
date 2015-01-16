@@ -346,7 +346,8 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::BaseType *bt, string
 	case libdap::dods_uint8_c:
 	case libdap::dods_int64_c:
 	case libdap::dods_uint64_c:
-	case libdap::dods_url4_c:
+	// Removed from DAP4? jhrg 1/7/15
+	// case libdap::dods_url4_c:
 	case libdap::dods_enum_c:
 	case libdap::dods_group_c:
 	{
@@ -615,7 +616,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
 	case libdap::dods_uint8_c:
 	case libdap::dods_int64_c:
 	case libdap::dods_uint64_c:
-	case libdap::dods_url4_c:
+	// case libdap::dods_url4_c:
 	case libdap::dods_enum_c:
 	case libdap::dods_group_c:
 	{
