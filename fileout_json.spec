@@ -29,7 +29,7 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install INSTALL="install -p"
 
-rm $RPM_BUILD_ROOT%{_libdir}/bes/libfonc_module.la
+rm $RPM_BUILD_ROOT%{_libdir}/bes/libfojson_module.la
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -42,7 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/bes/
 %dir %{_sysconfdir}/bes/modules
-%config(noreplace) %{_sysconfdir}/bes/modules/fonc.conf
+%config(noreplace) %{_sysconfdir}/bes/modules/fojson.conf
 %{_libdir}/bes/libfonc_module.so
 %doc COPYING COPYRIGHT NEWS README
 
