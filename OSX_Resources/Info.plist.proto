@@ -5,7 +5,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>_FULL_VERSION_, OPeNDAP</string>
 	<key>CFBundleIdentifier</key>
-	<string>opendap.fileout_netcdf</string>
+	<string>opendap.fileout_json</string>
 	<key>CFBundleShortVersionString</key>
 	<string>_FULL_VERSION_</string>
 	<key>IFMajorVersion</key>
