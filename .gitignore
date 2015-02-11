@@ -48,8 +48,9 @@ atlocal
 
 fojson.conf
 unit-tests/test_config.h
-bes-testsuite/fileout_jsonTest
+bes-testsuite/fileout_jsonTest*
 bes-testsuite/bes.conf
 bes-testsuite/package.m4
 
+unit-tests/FoJsonTest
 
