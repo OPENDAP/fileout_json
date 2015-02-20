@@ -31,6 +31,7 @@ DISTCLEANFILES = bes.conf
 AUTOM4TE = autom4te
 
 TESTSUITE = $(srcdir)/fileout_jsonTest
+TESTSUITEFLAGS = -j9
 
 check-local: atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)

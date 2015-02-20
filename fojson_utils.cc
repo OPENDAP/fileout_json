@@ -38,7 +38,6 @@
 
 namespace fojson {
 
-
 std::string escape_for_json(const std::string &input) {
     std::stringstream ss;
     for (size_t i = 0; i < input.length(); ++i) {
@@ -50,7 +49,6 @@ std::string escape_for_json(const std::string &input) {
     }
     return ss.str();
 }
-
 
 long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape ){
     BESDEBUG(utils_debug_key, "fojson::computeConstrainedShape() - BEGIN. Array name: "<< a->name() << endl);
@@ -87,9 +85,6 @@ long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape 
     return totalSize;
 }
 
-
-
-
 #if 0
 /**
  * Replace every occurrence of 'char_to_escape' with the same preceded
@@ -108,7 +103,5 @@ std::string backslash_escape(std::string source, char char_to_escape){
 	return escaped_result;
 }
 #endif
-
-
 
 } /* namespace fojson */

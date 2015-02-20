@@ -34,13 +34,11 @@
 
 #include <Array.h>
 
-
 namespace fojson {
 
-std::string escape_for_json(std::string &source);
+std::string escape_for_json(const std::string &source);
 
 long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape );
-
 
 #if 0
 std::string backslash_escape(std::string source, char char_to_escape);
