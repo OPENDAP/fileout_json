@@ -35,11 +35,11 @@
 #include <fstream>
 #include <stddef.h>
 #include <string>
+#include <typeinfo>
 
 using std::ostringstream;
 using std::istringstream;
 
-#include "FoW10nJsonTransform.h"
 
 #include <DDS.h>
 #include <Structure.h>
@@ -53,7 +53,8 @@ using std::istringstream;
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
-#include <utils.h>
+#include "FoW10nJsonTransform.h"
+#include "fojson_utils.h"
 
 #define FoW10nJsonTransform_debug_key "fojson"
 
@@ -158,7 +159,14 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 		else {
 	    	if(i)
 		    	*strm << ", ";
-	    	*strm << values[indx++];
+	    	if(typeid(T) == typeid(std::string)){
+	    		// Strings need to be escaped to be included in a JSON object.
+	    		std::string val = ((std::string *) values)[indx++];
+				*strm << "\"" << fojson::escape_for_json( val )<< "\"";
+	    	}
+	    	else {
+				*strm << values[indx++];
+	    	}
 		}
     }
 	*strm << "]";
@@ -183,7 +191,7 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 
 	int numDim = a->dimensions(true);
 	vector<unsigned int> shape(numDim);
-	long length = computeConstrainedShape(a, &shape);
+	long length = fojson::computeConstrainedShape(a, &shape);
 
 	*strm << childindent << "\"shape\": [";
 
@@ -199,6 +207,22 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 
 		// Data
 		*strm << childindent << "\"data\": ";
+        unsigned int indx;
+    	if(typeid(T) == typeid(std::string)){
+    		// The string type utilizes a specialized version of libdap:Array.value()
+    		vector<std::string> sourceValues;
+    		a->value(sourceValues);
+    		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
+    	}
+    	else {
+    		T *src = new T[length];
+    		a->value(src);
+    		indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+    		delete src;
+    	}
+
+#if 0
+
 
 	    T *src = new T[length];
 	    a->value(src);
@@ -206,6 +230,8 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 	    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
 
 	    delete src;
+#endif
+
 
 	    if(length != indx)
 			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
@@ -589,15 +615,13 @@ void FoW10nJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, st
 		*strm << childindent << "\"data\": [";
 
 		if(b->type() == libdap::dods_str_c || b->type() == libdap::dods_url_c ){
-			// String values need to be escaped.
-			std::stringstream ss;
-			b->print_val(ss,"",false);
-			*strm << "\"" << backslash_escape(ss.str(), '"') << "\"";
+			libdap::Str *strVar = (libdap::Str *)b;
+			std::string tmpString = strVar->value();
+			*strm << "\"" << fojson::escape_for_json(tmpString) << "\"";
 		}
 		else {
 			b->print_val(*strm, "", false);
 		}
-
 
 		*strm << "]";
 	}
@@ -791,8 +815,8 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table
 						// Escape the double quotes found in String and URL type attribute values.
 						if(attr_table.get_attr_type(at_iter) == libdap::Attr_string || attr_table.get_attr_type(at_iter) == libdap::Attr_url){
 							*strm << "\"";
-							string value = (*values)[i] ;
-							*strm << backslash_escape(value, '"') ;
+							// string value = (*values)[i] ;
+							*strm << fojson::escape_for_json((*values)[i]) ;
 							*strm << "\"";
 						}
 						else {

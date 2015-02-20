@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 if DAP_MODULES
 AM_CPPFLAGS = -I$(top_srcdir)/dispatch -I$(top_srcdir)/dap \
 -I$(top_srcdir)/modules/fileout_json $(DAP_CFLAGS)
-LIBADD = $(BES_DISPATCH_LIB) $(BES_EXTRA_LIBS) $(DAP_SERVER_LIBS)
+LIBADD = $(BES_DISPATCH_LIB) $(BES_EXTRA_LIBS) $(DAP_SERVER_LIBS) 
 else
 AM_CPPFLAGS = -I$(top_srcdir) $(BES_CPPFLAGS)
 LIBADD = $(BES_DAP_LIBS)
@@ -37,9 +37,10 @@ TESTS = $(UNIT_TESTS)
 
 UNIT_TESTS = FoJsonTest
 
-OBJS = ../FoJsonTransform.o ../FoW10nJsonTransform.o ../utils.o
+OBJS = ../FoJsonTransform.o ../FoW10nJsonTransform.o ../fojson_utils.o
 
-FoJsonTest_SOURCES = FoJsonTest.cc 
+
+FoJsonTest_SOURCES = FoJsonTest.cc ($SRCS)
 FoJsonTest_LDADD = $(OBJS) $(LIBADD)
 
 noinst_HEADERS = test_config.h

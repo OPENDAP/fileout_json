@@ -26,20 +26,30 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef FOJSON_UTILS_H_
+#define FOJSON_UTILS_H_ 1
 
 #include <string>
 #include <vector>
 
 #include <Array.h>
 
-std::string backslash_escape(std::string source, char char_to_escape);
+
+namespace fojson {
+
+std::string escape_for_json(std::string &source);
 
 long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape );
 
 
+#if 0
+std::string backslash_escape(std::string source, char char_to_escape);
+#endif
 
-#endif /* UTILS_H_ */
+} // namespace fojson
+
+
+
+#endif /* FOJSON_UTILS_H_ */
 
 

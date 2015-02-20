@@ -32,9 +32,10 @@
 #include <iostream>
 #include <fstream>
 #include <stddef.h>
+#include <string>
+#include <typeinfo>
 
 
-#include "FoJsonTransform.h"
 
 #include <DDS.h>
 #include <Structure.h>
@@ -48,7 +49,8 @@
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
-#include <utils.h>
+#include "FoJsonTransform.h"
+#include "fojson_utils.h"
 
 #define ATTRIBUTE_SEPARATOR "."
 #define JSON_ORIGINAL_NAME "json_original_name"
@@ -77,7 +79,14 @@ template<typename T> unsigned  int FoJsonTransform::json_simple_type_array_worke
 		else {
 	    	if(i)
 		    	*strm << ", ";
-	    	*strm << values[indx++];
+	    	if(typeid(T) == typeid(std::string)){
+	    		// Strings need to be escaped to be included in a JSON object.
+	    		std::string val = ((std::string *) values)[indx++];
+				*strm << "\"" << fojson::escape_for_json( val )<< "\"";
+	    	}
+	    	else {
+				*strm << values[indx++];
+	    	}
 		}
 
     }
@@ -104,18 +113,34 @@ template<typename T>void FoJsonTransform::json_simple_type_array(std::ostream *s
     if(sendData){ // send data
         int numDim = a->dimensions(true);
         std::vector<unsigned int> shape(numDim);
-        long length = computeConstrainedShape(a, &shape);
+        long length = fojson::computeConstrainedShape(a, &shape);
 
 
     	//*strm << "," << endl;
 
+        unsigned int indx;
+    	if(typeid(T) == typeid(std::string)){
+    		// The string type utilizes a specialized version of libdap:Array.value()
+    		vector<std::string> sourceValues;
+    		a->value(sourceValues);
+    		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
+    	}
+    	else {
+    		T *src = new T[length];
+    		a->value(src);
+    		indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+    		delete src;
+    	}
+
+#if 0
 		T *src = new T[length];
 		a->value(src);
 		unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+		delete src;
+#endif
 
 		if(length != indx)
 			BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
-		delete src;
     }
     else { // otherwise send metadata
     	*strm << "{" << endl;
@@ -382,7 +407,16 @@ void FoJsonTransform::transformAtomic(std::ostream *strm, libdap::BaseType *b, s
 	*strm << indent << "\"" << b->name() <<  "\": ";
 
 	if(sendData){
-		b->print_val(*strm, "", false);
+
+		if(b->type() == libdap::dods_str_c || b->type() == libdap::dods_url_c ){
+			libdap::Str *strVar = (libdap::Str *)b;
+			std::string tmpString = strVar->value();
+			*strm << "\"" << fojson::escape_for_json(tmpString) << "\"";
+		}
+		else {
+			b->print_val(*strm, "", false);
+		}
+
 	}
 	else {
 		transform(strm, b->get_attr_table(), indent);
@@ -572,18 +606,28 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
 
 	case libdap::dods_str_c:
 	{
+		json_simple_type_array<std::string>(strm,a,indent, sendData);
+		break;
+#if 0
 		//json_simple_type_array<Str>(strm,a,indent);
 		string s = (string) "File out JSON, " + "Arrays of Strings are not yet a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
+#endif
+
 	}
 
 	case libdap::dods_url_c:
 	{
+		json_simple_type_array<std::string>(strm,a,indent, sendData);
+		break;
+#if 0
 		//json_simple_type_array<Url>(strm,a,indent);
 		string s = (string) "File out JSON, " + "Arrays of URLs are not yet a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 		break;
+#endif
+
 	}
 
 	case libdap::dods_structure_c:
@@ -710,7 +754,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::AttrTable &attr_tabl
 							*strm << "\"";
 
 							string value = (*values)[i] ;
-							*strm << backslash_escape(value, '"') ;
+							*strm << fojson::escape_for_json(value) ;
 							*strm << "\"";
 						}
 						else {

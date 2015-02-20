@@ -17,6 +17,9 @@ lex.*.cc
 *.log
 *.trs
 
+## OS-X Finder scat
+*.DS_Store
+
 .dirstamp
 
 Makefile

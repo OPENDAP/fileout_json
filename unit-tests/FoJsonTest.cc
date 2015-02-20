@@ -27,6 +27,7 @@
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/extensions/HelperMacros.h>
+#include <math.h>       /* atan */
 
 #include "GetOpt.h"
 #include "DataDDS.h"
@@ -44,6 +45,8 @@
 #include "Grid.h"
 
 #include "test_config.h"
+#include "fojson_utils.h"
+
 #include "FoJsonTransform.h"
 #include "FoW10nJsonTransform.h"
 
@@ -468,7 +471,7 @@ public:
         libdap::Array oneDArrayF64("oneDArrayF64",&tmplt);
 
         int dim1Size = 2;
-		double pi = std::atan(1)*4;
+		double pi = atan(1)*4;
 		libdap::dods_float64 oneDdata[dim1Size];
 		for(long i=0; i<dim1Size ;i++)
 			oneDdata[i] = pi * (i * 0.1);
