@@ -146,7 +146,7 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 
 	unsigned int currentDimSize = (*shape)[currentDim];
 
-    for(int i=0; i<currentDimSize ;i++){
+    for(unsigned int i=0; i<currentDimSize ;i++){
 		if(currentDim < shape->size()-1){
 			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array_worker() - Recursing! indx:  " << indx
 					<< " currentDim: " << currentDim
@@ -195,7 +195,7 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 
 	*strm << childindent << "\"shape\": [";
 
-	for(int i=0; i<shape.size() ;i++){
+	for(std::vector<unsigned int>::size_type i=0; i<shape.size() ;i++){
 		if(i>0)
 			*strm << ",";
 		*strm << shape[i];
@@ -208,33 +208,63 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 		// Data
 		*strm << childindent << "\"data\": ";
         unsigned int indx;
-    	if(typeid(T) == typeid(std::string)){
-    		// The string type utilizes a specialized version of libdap:Array.value()
-    		vector<std::string> sourceValues;
-    		a->value(sourceValues);
-    		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
-    	}
-    	else {
-    		T *src = new T[length];
-    		a->value(src);
-    		indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-    		delete src;
-    	}
-
-#if 0
-
-
-	    T *src = new T[length];
-	    a->value(src);
-
-	    unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-
-	    delete src;
-#endif
-
+		T *src = new T[length];
+		a->value(src);
+		indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
+		delete src;
 
 	    if(length != indx)
 			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+	}
+
+	*strm << endl << indent << "}";
+
+}
+/**
+ * String version of json_simple_type_array(). This version exists because of the differing
+ * type signatures of the libdap::Vector::value() methods for numeric and c++ string types.
+ *
+ * @param strm Write to this stream
+ * @param a Source Array - write out data or metadata from or about this Array
+ * @param indent Indent the output so humans can make sense of it
+ * @param sendData True: send data; false: send metadata
+ */
+void FoW10nJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
+{
+
+	*strm << indent << "{" << endl;\
+
+	string childindent = indent + _indent_increment;
+
+	writeLeafMetadata(strm,a,childindent);
+
+	int numDim = a->dimensions(true);
+	vector<unsigned int> shape(numDim);
+	long length = fojson::computeConstrainedShape(a, &shape);
+
+	*strm << childindent << "\"shape\": [";
+
+	for(std::vector<unsigned int>::size_type i=0; i<shape.size() ;i++){
+		if(i>0)
+			*strm << ",";
+		*strm << shape[i];
+	}
+	*strm << "]";
+
+	if(sendData){
+		*strm << ","<< endl;
+
+		// Data
+		*strm << childindent << "\"data\": ";
+        unsigned int indx;
+
+		// The string type utilizes a specialized version of libdap:Array.value()
+		vector<std::string> sourceValues;
+		a->value(sourceValues);
+		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
+
+	    if(length != indx)
+			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array_string() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 
 
 	}
@@ -329,7 +359,7 @@ FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterfa
         throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
 }
 
-FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm) :
+FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
         _dds(dds), _localfile(""), _indent_increment("  "), _ostrm(ostrm)
 {
     if (!_dds)
@@ -458,7 +488,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Ba
 	*strm << indent << "\"leaves\": [";
 	if(leaves.size() > 0)
 		*strm << endl;
-	for(int l=0; l< leaves.size(); l++){
+	for(std::vector<libdap::BaseType>::size_type l=0; l< leaves.size(); l++){
 		libdap::BaseType *v = leaves[l];
 		BESDEBUG(FoW10nJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
 		if( l>0 ){
@@ -476,7 +506,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Ba
 	*strm << indent << "\"nodes\": [";
 	if(nodes.size() > 0)
 		*strm << endl;
-	for(int n=0; n< nodes.size(); n++){
+	for(std::vector<libdap::BaseType>::size_type n=0; n< nodes.size(); n++){
 		libdap::BaseType *v = nodes[n];
 		transform(strm, v, indent + _indent_increment, sendData);
 	}
@@ -673,23 +703,24 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string inde
 
 	case libdap::dods_str_c:
 	{
-		// @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
-		//json_simple_type_array<string>(strm,a,indent,sendData);
-		//break;
+		json_simple_type_array_string(strm,a,indent,sendData);
 
+#if 0
 		string s = (string) "File out JSON, " + "Arrays of String objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
+#endif
 		break;
 	}
 
 	case libdap::dods_url_c:
 	{
-		// @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
-		//json_simple_type_array<string>(strm,a,indent,sendData);
-		//break;
+		json_simple_type_array_string(strm,a,indent,sendData);
 
+#if 0
 		string s = (string) "File out JSON, " + "Arrays of URL objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
+#endif
+
 		break;
 	}
 
@@ -804,9 +835,9 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table
 
 					// Open value array
 					*strm  << "\"value\": [";
-					vector<string> *values = attr_table.get_attr_vector(at_iter);
+					vector<std::string> *values = attr_table.get_attr_vector(at_iter);
 					// write values
-					for(int i=0; i<values->size() ;i++){
+					for(std::vector<std::string>::size_type i=0; i<values->size() ;i++){
 
 						// not first thing? better use a comma...
 						if(i>0)

@@ -58,13 +58,14 @@ private:
 
     template<typename T> unsigned int json_simple_type_array_worker(std::ostream *strm, const std::vector<T> &values, unsigned int indx,
             const std::vector<unsigned int> &shape, unsigned int currentDim);
+
     template<typename T> void json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
+    void json_simple_type_array_string(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
 
 #if 0
     unsigned int json_simple_type_array_worker_string(std::ostream *strm, const vector<std::string> &values,
             unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim);
 #endif
-    void json_simple_type_array_string(std::ostream *strm, libdap::Array *a, string indent, bool sendData);
 
     void transformAtomic(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
 

@@ -95,7 +95,7 @@ template<typename T> unsigned int FoJsonTransform::json_simple_type_array_worker
  * @param indent A string containing the indent level.
  * @param sendData A boolean value that when evaluated as true will cause the data values to be sent and not the metadata.
  */
-template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a, string indent,
+template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent,
         bool sendData)
 {
     *strm << indent << "\"" << a->name() + "\":  ";
@@ -130,7 +130,7 @@ template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *
  * @param indent Indent the output so humans can make sense of it
  * @param sendData True: send data; false: send metadata
  */
-void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
+void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData)
 {
     *strm << indent << "\"" << a->name() + "\":  ";
 
@@ -146,7 +146,7 @@ void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::
 
         // make this an assert?
         if (length != indx)
-            BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  "
+            BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array_string() - indx NOT equal to content length! indx:  "
                     << indx << "  length: " << length << endl);
     }
     else { // otherwise send metadata
