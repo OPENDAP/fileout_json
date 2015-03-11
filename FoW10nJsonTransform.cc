@@ -229,7 +229,7 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
  * @param indent Indent the output so humans can make sense of it
  * @param sendData True: send data; false: send metadata
  */
-void FoW10nJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
+void FoW10nJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
 {
 
 	*strm << indent << "{" << endl;\
@@ -264,7 +264,7 @@ void FoW10nJsonTransform::json_simple_type_array_string(std::ostream *strm, libd
 		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
 
 	    if(length != indx)
-			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array_string() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+			BESDEBUG(FoW10nJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 
 
 	}
@@ -703,7 +703,7 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string inde
 
 	case libdap::dods_str_c:
 	{
-		json_simple_type_array_string(strm,a,indent,sendData);
+		json_string_array(strm,a,indent,sendData);
 
 #if 0
 		string s = (string) "File out JSON, " + "Arrays of String objects not a supported return type.";
@@ -714,7 +714,7 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string inde
 
 	case libdap::dods_url_c:
 	{
-		json_simple_type_array_string(strm,a,indent,sendData);
+		json_string_array(strm,a,indent,sendData);
 
 #if 0
 		string s = (string) "File out JSON, " + "Arrays of URL objects not a supported return type.";

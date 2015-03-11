@@ -130,7 +130,7 @@ template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *
  * @param indent Indent the output so humans can make sense of it
  * @param sendData True: send data; false: send metadata
  */
-void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData)
+void FoJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData)
 {
     *strm << indent << "\"" << a->name() + "\":  ";
 
@@ -146,7 +146,7 @@ void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::
 
         // make this an assert?
         if (length != indx)
-            BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array_string() - indx NOT equal to content length! indx:  "
+            BESDEBUG(FoJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  "
                     << indx << "  length: " << length << endl);
     }
     else { // otherwise send metadata
@@ -596,7 +596,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
         break;
 
     case libdap::dods_str_c: {
-        json_simple_type_array_string(strm, a, indent, sendData);
+        json_string_array(strm, a, indent, sendData);
         break;
 #if 0
         //json_simple_type_array<Str>(strm,a,indent);
@@ -608,8 +608,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
     }
 
     case libdap::dods_url_c: {
-        //json_simple_type_array<std::string>(strm, a, indent, sendData);
-        json_simple_type_array_string(strm, a, indent, sendData);
+        json_string_array(strm, a, indent, sendData);
         break;
 #if 0
         //json_simple_type_array<Url>(strm,a,indent);
