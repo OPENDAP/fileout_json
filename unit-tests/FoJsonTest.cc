@@ -52,7 +52,7 @@
 #include "test_config.h"
 #include "fojson_utils.h"
 
-#include "FoJsonTransform.h"
+#include "FoInstanceJsonTransform.h"
 #include "FoDapJsonTransform.h"
 
 static bool debug = false;
@@ -287,10 +287,10 @@ public:
 
             BESDataHandlerInterface dhi;
 
-            FoJsonTransform ft(test_DDS, dhi, tmpFile);
+            FoInstanceJsonTransform ft(test_DDS, dhi, tmpFile);
             //FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
 
-            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - Calling FoJsonTransform::transform(false) (send metadata)"
+            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - Calling FoInstanceJsonTransform::transform(false) (send metadata)"
                             << endl);
 
             ft.transform(false);
@@ -311,7 +311,7 @@ public:
 
             CPPUNIT_ASSERT(baseline.compare(result) == 0);
 
-            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..."
+            DBG(cerr << "FoJsonTest::test_instance_object_metadata_representation() - FoInstanceJsonTransform::transform() SUCCESS. Deleting DDS..."
                             << endl);
 
             delete test_DDS;
@@ -353,10 +353,10 @@ public:
 
             BESDataHandlerInterface dhi;
 
-            FoJsonTransform ft(test_DDS, dhi, tmpFile);
+            FoInstanceJsonTransform ft(test_DDS, dhi, tmpFile);
             //FoW10nJsonTransform ft(test_DDS, dhi, tmpFile );
 
-            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - Calling FoJsonTransform::transform(true) (send data)"
+            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - Calling FoInstanceJsonTransform::transform(true) (send data)"
                             << endl);
 
             ft.transform(true);
@@ -376,7 +376,7 @@ public:
 
             CPPUNIT_ASSERT(baseline.compare(result) == 0);
 
-            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - FoJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
+            DBG(cerr << "FoJsonTest::test_instance_object_data_representation() - FoInstanceJsonTransform::transform() SUCCESS. Deleting DDS..." << endl);
 
             delete test_DDS;
 

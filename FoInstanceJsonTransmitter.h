@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoJsonTransmitter.h
+// FoInstanceJsonTransmitter.h
 //
 // This file is part of BES JSON File Out Module
 //
@@ -26,8 +26,8 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-#ifndef A_FoJsonTransmitter_h
-#define A_FoJsonTransmitter_h 1
+#ifndef A_FoInstanceJsonTransmitter_h
+#define A_FoInstanceJsonTransmitter_h 1
 
 #include <DataDDS.h>
 #include <ConstraintEvaluator.h>
@@ -47,19 +47,19 @@ using namespace libdap;
  *
  * @see BESBasicTransmitter
  */
-class FoJsonTransmitter: public BESBasicTransmitter {
+class FoInstanceJsonTransmitter: public BESBasicTransmitter {
 private:
 	static string temp_dir;
 
 	static void return_temp_stream(const string &filename, ostream &strm);
 
 public:
-	FoJsonTransmitter();
-	virtual ~FoJsonTransmitter() { }
+	FoInstanceJsonTransmitter();
+	virtual ~FoInstanceJsonTransmitter() { }
 
 	static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
 	static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
 	// static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
-#endif // A_FoJsonTransmitter_h
+#endif // A_FoInstanceJsonTransmitter_h

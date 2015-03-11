@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoJsonTransmitter.cc
+// FoInstanceJsonTransmitter.cc
 //
 // This file is part of BES JSON File Out Module
 //
@@ -56,17 +56,16 @@
 #include <BESDataNames.h>
 #include <BESDebug.h>
 
-#include "FoJsonTransmitter.h"
-#include "FoJsonTransform.h"
+#include "FoInstanceJsonTransmitter.h"
+#include "FoInstanceJsonTransform.h"
 
 
 using namespace ::libdap;
 
 #define FO_JSON_TEMP_DIR "/tmp"
 
-#define RETURNAS_JSON "json"
 
-string FoJsonTransmitter::temp_dir;
+string FoInstanceJsonTransmitter::temp_dir;
 
 /** @brief Construct the FoJsonTransmitter.
  *
@@ -78,23 +77,23 @@ string FoJsonTransmitter::temp_dir;
  * FoJson.Tempdir. If this variable is not found or is not set then it
  * defaults to the macro definition FO_JSON_TEMP_DIR.
  */
-FoJsonTransmitter::FoJsonTransmitter() :
+FoInstanceJsonTransmitter::FoInstanceJsonTransmitter() :
 		BESBasicTransmitter()
 {
-    add_method(DATA_SERVICE, FoJsonTransmitter::send_data);
-    add_method(DDX_SERVICE,  FoJsonTransmitter::send_metadata);
+    add_method(DATA_SERVICE, FoInstanceJsonTransmitter::send_data);
+    add_method(DDX_SERVICE,  FoInstanceJsonTransmitter::send_metadata);
 
-    if (FoJsonTransmitter::temp_dir.empty()) {
+    if (FoInstanceJsonTransmitter::temp_dir.empty()) {
         // Where is the temp directory for creating these files
         bool found = false;
         string key = "FoJson.Tempdir";
-        TheBESKeys::TheKeys()->get_value(key, FoJsonTransmitter::temp_dir, found);
-        if (!found || FoJsonTransmitter::temp_dir.empty()) {
-            FoJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
+        TheBESKeys::TheKeys()->get_value(key, FoInstanceJsonTransmitter::temp_dir, found);
+        if (!found || FoInstanceJsonTransmitter::temp_dir.empty()) {
+        	FoInstanceJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
         }
-        string::size_type len = FoJsonTransmitter::temp_dir.length();
-        if (FoJsonTransmitter::temp_dir[len - 1] == '/') {
-            FoJsonTransmitter::temp_dir = FoJsonTransmitter::temp_dir.substr(0, len - 1);
+        string::size_type len = FoInstanceJsonTransmitter::temp_dir.length();
+        if (FoInstanceJsonTransmitter::temp_dir[len - 1] == '/') {
+        	FoInstanceJsonTransmitter::temp_dir = FoInstanceJsonTransmitter::temp_dir.substr(0, len - 1);
         }
     }
 }
@@ -118,7 +117,7 @@ FoJsonTransmitter::FoJsonTransmitter() :
  * there are any problems reading the data, writing to a JSON file, or
  * streaming the JSON file
  */
-void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
+void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
     if (!bdds) {
@@ -179,7 +178,7 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
     }
 
     try {
-        FoJsonTransform ft(dds, dhi, &o_strm);
+        FoInstanceJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( false /* do not send data */ );
     }
@@ -209,7 +208,7 @@ void FoJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInte
  * there are any problems reading the data, writing to a JSON file, or
  * streaming the JSON file
  */
-void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
+void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDataDDSResponse *bdds = dynamic_cast<BESDataDDSResponse *>(obj);
     if (!bdds)
@@ -287,7 +286,7 @@ void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterfac
     BESDEBUG("fojson", "FoJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
 #endif
     try {
-        FoJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
+        FoInstanceJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
 
         ft.transform( true /* send data */ );
 
@@ -323,7 +322,7 @@ void FoJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterfac
  * @param strm C++ ostream to write the contents of the file to
  * @throws BESInternalError if problem opening the file
  */
-void FoJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
+void FoInstanceJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
 {
     ifstream os;
     os.open(filename.c_str(), ios::binary | ios::in);

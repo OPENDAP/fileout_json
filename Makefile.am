@@ -31,10 +31,10 @@ libfojson_module_la_SOURCES = $(FOJSON_SRC) $(FOJSON_HDR)
 libfojson_module_la_LDFLAGS = -avoid-version -module 
 libfojson_module_la_LIBADD = $(LIBADD)
 
-FOJSON_SRC = FoJsonTransform.cc FoJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc \
+FOJSON_SRC = FoInstanceJsonTransform.cc FoInstanceJsonTransmitter.cc FoJsonRequestHandler.cc FoJsonModule.cc \
 	FoDapJsonTransmitter.cc FoDapJsonTransform.cc StreamString.cc fojson_utils.cc
 
-FOJSON_HDR = FoJsonTransform.h FoJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h \
+FOJSON_HDR = FoInstanceJsonTransform.h FoInstanceJsonTransmitter.h FoJsonRequestHandler.h FoJsonModule.h \
 	FoDapJsonTransmitter.h FoDapJsonTransform.h StreamString.h fojson_utils.h
 
 EXTRA_DIST = data COPYING fojson.conf.in fileout_json.spec doxy.conf

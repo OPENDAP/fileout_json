@@ -37,7 +37,7 @@ TESTS = $(UNIT_TESTS)
 
 UNIT_TESTS = FoJsonTest
 
-OBJS = ../FoJsonTransform.o ../FoDapJsonTransform.o ../fojson_utils.o
+OBJS = ../FoDapJsonTransform.o ../fojson_utils.o ../FoInstanceJsonTransform.o 
 
 
 FoJsonTest_SOURCES = FoJsonTest.cc ($SRCS)
