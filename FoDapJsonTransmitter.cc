@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoW10nJsonTransmitter.cc
+// FoDapJsonTransmitter.cc
 //
 // This file is part of BES JSON File Out Module
 //
@@ -55,16 +55,15 @@
 #include <BESDataNames.h>
 #include <BESDebug.h>
 
-#include "FoW10nJsonTransmitter.h"
-#include "FoJsonTransform.h"
+#include "FoDapJsonTransmitter.h"
+#include "FoDapJsonTransform.h"
 
-#include "FoW10nJsonTransform.h"
 
 using namespace ::libdap;
 
 #define FO_JSON_TEMP_DIR "/tmp"
 
-string FoW10nJsonTransmitter::temp_dir;
+string FoDapJsonTransmitter::temp_dir;
 
 /** @brief Construct the FoW10nJsonTransmitter
  *
@@ -77,22 +76,22 @@ string FoW10nJsonTransmitter::temp_dir;
  * FoJson.Tempdir. If this variable is not found or is not set then it
  * defaults to the macro definition FO_JSON_TEMP_DIR.
  */
-FoW10nJsonTransmitter::FoW10nJsonTransmitter() : BESBasicTransmitter()
+FoDapJsonTransmitter::FoDapJsonTransmitter() : BESBasicTransmitter()
 {
-    add_method(DATA_SERVICE, FoW10nJsonTransmitter::send_data);
-    add_method(DDX_SERVICE,  FoW10nJsonTransmitter::send_metadata);
+    add_method(DATA_SERVICE, FoDapJsonTransmitter::send_data);
+    add_method(DDX_SERVICE,  FoDapJsonTransmitter::send_metadata);
 
-    if (FoW10nJsonTransmitter::temp_dir.empty()) {
+    if (FoDapJsonTransmitter::temp_dir.empty()) {
         // Where is the temp directory for creating these files
         bool found = false;
         string key = "FoJson.Tempdir";
-        TheBESKeys::TheKeys()->get_value(key, FoW10nJsonTransmitter::temp_dir, found);
-        if (!found || FoW10nJsonTransmitter::temp_dir.empty()) {
-            FoW10nJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
+        TheBESKeys::TheKeys()->get_value(key, FoDapJsonTransmitter::temp_dir, found);
+        if (!found || FoDapJsonTransmitter::temp_dir.empty()) {
+        	FoDapJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
         }
-        string::size_type len = FoW10nJsonTransmitter::temp_dir.length();
-        if (FoW10nJsonTransmitter::temp_dir[len - 1] == '/') {
-            FoW10nJsonTransmitter::temp_dir = FoW10nJsonTransmitter::temp_dir.substr(0, len - 1);
+        string::size_type len = FoDapJsonTransmitter::temp_dir.length();
+        if (FoDapJsonTransmitter::temp_dir[len - 1] == '/') {
+        	FoDapJsonTransmitter::temp_dir = FoDapJsonTransmitter::temp_dir.substr(0, len - 1);
         }
     }
 }
@@ -112,7 +111,7 @@ FoW10nJsonTransmitter::FoW10nJsonTransmitter() : BESBasicTransmitter()
  * there are any problems reading the data, writing to a JSON file, or
  * streaming the JSON file
  */
-void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
+void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDataDDSResponse *bdds = dynamic_cast<BESDataDDSResponse *>(obj);
     if (!bdds)
@@ -122,7 +121,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
     if (!dds)
         throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
 
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - parsing the constraint" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - parsing the constraint" << endl);
 
     ConstraintEvaluator &eval = bdds->get_ce();
 
@@ -143,7 +142,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
     }
 
     // now we need to read the data
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - reading data into DataDDS" << endl);
 
     try {
         // Handle *functional* constraint expressions specially
@@ -172,7 +171,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
     }
 
     try {
-        FoW10nJsonTransform ft(dds, dhi, &o_strm);
+        FoDapJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( true /* send data too */ );
     }
@@ -183,7 +182,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
         throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
 
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
 /** @brief The static method registered to transmit OPeNDAP data objects as
@@ -201,7 +200,7 @@ void FoW10nJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInte
  * there are any problems reading the data, writing to a JSON file, or
  * streaming the JSON file
  */
-void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
+void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
     BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
     if (!bdds)
@@ -211,7 +210,7 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
     if (!dds)
         throw BESInternalError("No DDS has been created for transmit", __FILE__, __LINE__);
 
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_metadata - parsing the constraint" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata - parsing the constraint" << endl);
 
     ConstraintEvaluator &eval = bdds->get_ce();
 
@@ -232,7 +231,7 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
     }
 
     // now we need to read the data
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - reading data into DataDDS" << endl);
 
     try {
         // Handle *functional* constraint expressions specially
@@ -258,52 +257,19 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
-#if 0
-    string temp_file_name = FoW10nJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
-    vector<char> temp_full(temp_file_name.length() + 1);
-    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
-    temp_full[len] = '\0';
-    // cover the case where older versions of mkstemp() create the file using
-    // a mode of 666.
-    mode_t original_mode = umask(077);
-    int fd = mkstemp(&temp_full[0]);
-    // If we keep the temp files, it can be unliked here. jhrg 7/31/14
-    umask(original_mode);
-
-    if (fd == -1)
-        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
-
-    // transform the OPeNDAP DataDDS to the netcdf file
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
-#endif
 
     try {
-        FoW10nJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
+        FoDapJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
 
         ft.transform( false /* send metadata only */ );
 
         // FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
-#if o
-    catch (BESError &e) {
-        close(fd);
-        (void) unlink(&temp_full[0]);
-        throw;
-    }
-#endif
     catch (...) {
-#if 0
-    	close(fd);
-        (void) unlink(&temp_full[0]);
-#endif
-        throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+        throw BESInternalError("FoDapJsonTransmitter: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
 
-#if 0
-    close(fd);
-    (void) unlink(&temp_full[0]);
-#endif
-    BESDEBUG("fojson", "FoW10nJsonTransmitter::send_data - done transmitting JSON" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
 
 /** @brief stream the temporary netcdf file back to the requester
@@ -315,7 +281,7 @@ void FoW10nJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandler
  * @param strm C++ ostream to write the contents of the file to
  * @throws BESInternalError if problem opening the file
  */
-void FoW10nJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
+void FoDapJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
 {
     //  int bytes = 0 ;    // Not used; jhrg 3/16/11
     ifstream os;

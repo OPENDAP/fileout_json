@@ -59,7 +59,6 @@
 #include "FoJsonTransmitter.h"
 #include "FoJsonTransform.h"
 
-#include "FoW10nJsonTransform.h"
 
 using namespace ::libdap;
 

@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoW10nJsonTransform.cc
+// FoDapJsonTransform.cc
 //
 // This file is part of BES JSON File Out Module
 //
@@ -27,7 +27,7 @@
 //
 
 
-#include "FoW10nJsonTransform.h"
+#include "FoDapJsonTransform.h"
 #include "config.h"
 
 #include <sstream>
@@ -53,94 +53,17 @@ using std::istringstream;
 #include <BESDebug.h>
 #include <BESInternalError.h>
 
-#include "FoW10nJsonTransform.h"
+#include "FoDapJsonTransform.h"
 #include "fojson_utils.h"
 
-#define FoW10nJsonTransform_debug_key "fojson"
+#define FoDapJsonTransform_debug_key "fojson"
 
-/**
- * Returns the correct w10n type for the passed instance of a DAP type.
- */
-string getW10nTypeString(libdap::BaseType *bt){
-	switch(bt->type()){
-	// Handle the atomic types - that's easy!
-	case libdap::dods_byte_c:
-		return "b";
-		break;
-
-	case libdap::dods_int16_c:
-		return "i";
-		break;
-
-	case libdap::dods_uint16_c:
-		return "ui";
-		break;
-
-	case libdap::dods_int32_c:
-		return "i";
-		break;
-
-	case libdap::dods_uint32_c:
-		return "ui";
-		break;
-
-	case libdap::dods_float32_c:
-		return "f";
-		break;
-
-	case libdap::dods_float64_c:
-		return "f";
-		break;
-
-	case libdap::dods_str_c:
-		return "s";
-		break;
-
-	case libdap::dods_url_c:
-		return "s";
-		break;
-
-	case libdap::dods_structure_c:
-	case libdap::dods_grid_c:
-	case libdap::dods_sequence_c:
-	case libdap::dods_array_c:
-	{
-		string s = (string) "File out JSON, W10N supports complex data types as nodes. "
-				"The variable " + bt->type_name() +" " +bt->name() +" is a node type.";
-        throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
-
-
-	case libdap::dods_int8_c:
-	case libdap::dods_uint8_c:
-	case libdap::dods_int64_c:
-	case libdap::dods_uint64_c:
-	// case libdap::dods_url4_c:
-	case libdap::dods_enum_c:
-	case libdap::dods_group_c:
-	{
-		string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
-        throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
-
-	default:
-	{
-		string s = (string) "File out JSON, " + "Unrecognized type.";
-        throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
-
-	}
-
-}
 
 /**
  *  @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
  *
  */
-template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
+template<typename T> unsigned  int FoDapJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
 
 	*strm << "[";
 
@@ -148,7 +71,7 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 
     for(unsigned int i=0; i<currentDimSize ;i++){
 		if(currentDim < shape->size()-1){
-			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array_worker() - Recursing! indx:  " << indx
+			BESDEBUG(FoDapJsonTransform_debug_key, "json_simple_type_array_worker() - Recursing! indx:  " << indx
 					<< " currentDim: " << currentDim
 					<< " currentDimSize: " << currentDimSize
 					<< endl);
@@ -177,10 +100,10 @@ template<typename T> unsigned  int FoW10nJsonTransform::json_simple_type_array_w
 
 
 /**
- * Writes the w10n json representation of the passed DAP Array of simple types. If the
+ * Writes the json representation of the passed DAP Array of simple types. If the
  * parameter "sendData" evaluates to true then data will also be sent.
  */
-template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *strm, libdap::Array *a, string indent, bool sendData){
+template<typename T>void FoDapJsonTransform::json_simple_type_array(ostream *strm, libdap::Array *a, string indent, bool sendData){
 
 
 	*strm << indent << "{" << endl;\
@@ -214,7 +137,7 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
 		delete src;
 
 	    if(length != indx)
-			BESDEBUG(FoW10nJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+			BESDEBUG(FoDapJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 	}
 
 	*strm << endl << indent << "}";
@@ -229,7 +152,7 @@ template<typename T>void FoW10nJsonTransform::json_simple_type_array(ostream *st
  * @param indent Indent the output so humans can make sense of it
  * @param sendData True: send data; false: send metadata
  */
-void FoW10nJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
+void FoDapJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
 {
 
 	*strm << indent << "{" << endl;\
@@ -264,7 +187,7 @@ void FoW10nJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a
 		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
 
 	    if(length != indx)
-			BESDEBUG(FoW10nJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+			BESDEBUG(FoDapJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 
 
 	}
@@ -276,9 +199,9 @@ void FoW10nJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a
 
 
 /**
- * Writes the w10n json opener for the Dataset, including name and top level DAP attributes.
+ * Writes the json opener for the Dataset, including name and top level DAP attributes.
  */
-void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, string indent){
+void FoDapJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, string indent){
 
 	// Name
 	*strm << indent << "\"name\": \""<< dds->get_dataset_name() << "\"," << endl;
@@ -290,10 +213,10 @@ void FoW10nJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, 
 }
 
 /**
- * Writes w10n json opener for a DAP object that seen as a "node" in w10n semantics.
+ * Writes json opener for a DAP object that is seen as a "node" in w10n semantics.
  * Header includes object name and attributes
  */
-void FoW10nJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt, string indent){
+void FoDapJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt, string indent){
 
 	// Name
 	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
@@ -307,23 +230,23 @@ void FoW10nJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt,
 }
 
 /**
- * Writes w10n json opener for a DAP object that is seen as a "leaf" in w10n semantics.
- * Header includes object name. attributes, and w10n type.
+ * Writes json opener for a DAP object that is seen as a "leaf" in w10n semantics.
+ * Header includes object name. attributes, and  type.
  */
-void FoW10nJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt, string indent){
+void FoDapJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt, string indent){
 
 	// Name
 	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
 
 
 
-	// w10n type
+	// type
 	if(bt->type() == libdap::dods_array_c){
 		libdap::Array *a = (libdap::Array *)bt;
-		*strm << indent << "\"type\": \""<< getW10nTypeString(a->var()) << "\"," << endl;
+		*strm << indent << "\"type\": \""<< a->var()->type_name() << "\"," << endl;
 	}
 	else {
-		*strm << indent << "\"type\": \""<< getW10nTypeString(bt) << "\"," << endl;
+		*strm << indent << "\"type\": \""<< bt->type_name() << "\"," << endl;
 	}
 
 
@@ -349,7 +272,7 @@ void FoW10nJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt,
  * @throws BESInternalError if dds provided is empty or not read, if the
  * file is not specified or failed to create the netcdf file
  */
-FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
+FoDapJsonTransform::FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
         _dds(dds), _localfile(localfile), _indent_increment("  "), _ostrm(0)
 {
     if (!_dds)
@@ -359,7 +282,7 @@ FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterfa
         throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
 }
 
-FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
+FoDapJsonTransform::FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
         _dds(dds), _localfile(""), _indent_increment("  "), _ostrm(ostrm)
 {
     if (!_dds)
@@ -373,7 +296,7 @@ FoW10nJsonTransform::FoW10nJsonTransform(libdap::DDS *dds, BESDataHandlerInterfa
  *
  * Cleans up any temporary data created during the transformation
  */
-FoW10nJsonTransform::~FoW10nJsonTransform()
+FoDapJsonTransform::~FoDapJsonTransform()
 {
 }
 
@@ -386,9 +309,9 @@ FoW10nJsonTransform::~FoW10nJsonTransform()
  *
  * @param strm C++ i/o stream to dump the information to
  */
-void FoW10nJsonTransform::dump(ostream &strm) const
+void FoDapJsonTransform::dump(ostream &strm) const
 {
-    strm << BESIndent::LMarg << "FoW10nJsonTransform::dump - (" << (void *) this << ")" << endl;
+    strm << BESIndent::LMarg << "FoDapJsonTransform::dump - (" << (void *) this << ")" << endl;
     BESIndent::Indent();
     strm << BESIndent::LMarg << "temporary file = " << _localfile << endl;
     if(_dds != 0){
@@ -408,7 +331,7 @@ void FoW10nJsonTransform::dump(ostream &strm) const
  * particular JSON type. Also write out any global attributes stored at the
  * top level of the DataDDS.
  */
-void FoW10nJsonTransform::transform(bool sendData)
+void FoDapJsonTransform::transform(bool sendData)
 {
     // used to ensure the _ostrm is closed only when it's a temp file
 	bool used_temp_file = false;
@@ -439,7 +362,7 @@ void FoW10nJsonTransform::transform(bool sendData)
  * DAP Constructor types are semantically equivalent to a w10n node type so they
  * must be represented as a collection of child nodes and leaves.
  */
-void FoW10nJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr, string indent, bool sendData){
+void FoDapJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr, string indent, bool sendData){
 	vector<libdap::BaseType *> leaves;
 	vector<libdap::BaseType *> nodes;
 
@@ -482,7 +405,7 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr
  * This worker method allows us to recursively traverse a "node" variables contents and
  * any child nodes will be traversed as well.
  */
-void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<libdap::BaseType *> leaves, vector<libdap::BaseType *> nodes, string indent, bool sendData){
+void FoDapJsonTransform::transform_node_worker(ostream *strm, vector<libdap::BaseType *> leaves, vector<libdap::BaseType *> nodes, string indent, bool sendData){
 
 	// Write down this nodes leaves
 	*strm << indent << "\"leaves\": [";
@@ -490,7 +413,7 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Ba
 		*strm << endl;
 	for(std::vector<libdap::BaseType>::size_type l=0; l< leaves.size(); l++){
 		libdap::BaseType *v = leaves[l];
-		BESDEBUG(FoW10nJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
+		BESDEBUG(FoDapJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
 		if( l>0 ){
 			*strm << "," ;
 			*strm << endl ;
@@ -520,10 +443,10 @@ void FoW10nJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Ba
 
 
 /**
- * Writes a w10n JSON representation of the DDS to the passed stream. Data is sent is the sendData
+ * Writes a JSON representation of the DDS to the passed stream. Data is sent is the sendData
  * flag is true.
  */
-void FoW10nJsonTransform::transform(ostream *strm, libdap::DDS *dds, string indent, bool sendData){
+void FoDapJsonTransform::transform(ostream *strm, libdap::DDS *dds, string indent, bool sendData){
 
 
 
@@ -567,10 +490,10 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::DDS *dds, string inde
 
 
 /**
- * Write the w10n json representation of the passed BAseType instance. If the
+ * Write the json representation of the passed BAseType instance. If the
  * parameter sendData is true then include the data.
  */
-void FoW10nJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string  indent, bool sendData)
+void FoDapJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string  indent, bool sendData)
 {
 	switch(bt->type()){
 	// Handle the atomic types - that's easy!
@@ -627,10 +550,10 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string 
 }
 
 /**
- * Write the w10n json representation of the passed BaseType instance - which had better be one of the
+ * Write the json representation of the passed BaseType instance - which had better be one of the
  * atomic DAP types. If the parameter sendData is true then include the data.
  */
-void FoW10nJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, string indent, bool sendData){
+void FoDapJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, string indent, bool sendData){
 
 	*strm << indent << "{" << endl;
 
@@ -661,12 +584,12 @@ void FoW10nJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, st
 
 
 /**
- * Write the w10n json representation of the passed DAP Array instance - which had better be one of
+ * Write the json representation of the passed DAP Array instance - which had better be one of
  * atomic DAP types. If the parameter sendData is true then include the data.
  */
-void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string indent, bool sendData){
+void FoDapJsonTransform::transform(ostream *strm, libdap::Array *a, string indent, bool sendData){
 
-    BESDEBUG(FoW10nJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
+    BESDEBUG(FoDapJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
             << " a->type(): " << a->type()
 			<< " a->var()->type(): " << a->var()->type()
 			<< endl);
@@ -776,10 +699,10 @@ void FoW10nJsonTransform::transform(ostream *strm, libdap::Array *a, string inde
 
 
 /**
- * Write the w10n json representation of the passed DAP AttrTable instance.
+ * Write the json representation of the passed DAP AttrTable instance.
  * Supports multi-valued attributes and nested attributes.
  */
-void FoW10nJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table, string  indent){
+void FoDapJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table, string  indent){
 
 	string child_indent = indent + _indent_increment;
 

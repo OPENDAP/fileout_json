@@ -27,8 +27,8 @@
 //
 
 
-#ifndef A_FoW10nJsonTransmitter_h
-#define A_FoW10nJsonTransmitter_h 1
+#ifndef A_FoDapJsonTransmitter_h
+#define A_FoDapJsonTransmitter_h 1
 
 #include <DataDDS.h>
 #include <ConstraintEvaluator.h>
@@ -49,19 +49,19 @@ using namespace libdap;
  *
  * @see BESBasicTransmitter
  */
-class FoW10nJsonTransmitter: public BESBasicTransmitter {
+class FoDapJsonTransmitter: public BESBasicTransmitter {
 private:
     static void return_temp_stream(const string &filename, ostream &strm);
     static string temp_dir;
 
 public:
-    FoW10nJsonTransmitter();
-    virtual ~FoW10nJsonTransmitter() { }
+    FoDapJsonTransmitter();
+    virtual ~FoDapJsonTransmitter() { }
 
     static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
     static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
     //static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
-#endif // A_FoW10nJsonTransmitter_h
+#endif // A_FoDapJsonTransmitter_h
 

@@ -34,7 +34,7 @@
 using std::endl;
 
 #include "FoJsonModule.h"
-#include "FoW10nJsonTransmitter.h"
+#include "FoDapJsonTransmitter.h"
 #include "FoJsonTransmitter.h"
 #include "FoJsonRequestHandler.h"
 #include "BESRequestHandlerList.h"
@@ -71,7 +71,7 @@ void FoJsonModule::initialize(const string &modname)
 
 
     BESDEBUG( "fojson", "    adding " << RETURNAS_JSON << " transmitter" << endl );
-    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON, new FoW10nJsonTransmitter());
+    BESReturnManager::TheManager()->add_transmitter(RETURNAS_JSON, new FoDapJsonTransmitter());
 
 
     BESDEBUG( "fojson", "    adding " << RETURNAS_IJSON << " transmitter" << endl );

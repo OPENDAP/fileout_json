@@ -4,73 +4,73 @@
   "leaves": [
     {
       "name": "byte",
-      "type": "b",
+      "type": "Byte",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "i16",
-      "type": "i",
+      "type": "Int16",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "i32",
-      "type": "i",
+      "type": "Int32",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "ui16",
-      "type": "ui",
+      "type": "UInt16",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "ui32",
-      "type": "ui",
+      "type": "UInt32",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "f32",
-      "type": "f",
+      "type": "Float32",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "f64",
-      "type": "f",
+      "type": "Float64",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "str",
-      "type": "s",
+      "type": "String",
       "attributes": [],
       "shape": [1],
 ,
     {
       "name": "oneDArrayF64",
-      "type": "f",
+      "type": "Float64",
       "attributes": [],
       "shape": [2]
     },
     {
       "name": "twoDArrayF64",
-      "type": "f",
+      "type": "Float64",
       "attributes": [],
       "shape": [2,4]
     },
     {
       "name": "twoDArrayUI32",
-      "type": "ui",
+      "type": "UInt32",
       "attributes": [],
       "shape": [2,4]
     },
     {
       "name": "threeDArrayF64",
-      "type": "f",
+      "type": "Float64",
       "attributes": [],
       "shape": [2,4,5]
     }
@@ -82,19 +82,19 @@
       "leaves": [
         {
           "name": "byte",
-          "type": "b",
+          "type": "Byte",
           "attributes": [],
           "shape": [1],
 ,
         {
           "name": "i16",
-          "type": "i",
+          "type": "Int16",
           "attributes": [],
           "shape": [1],
 ,
         {
           "name": "fooStr",
-          "type": "s",
+          "type": "String",
           "attributes": [],
           "shape": [1],
 
@@ -107,19 +107,19 @@
       "leaves": [
         {
           "name": "byte",
-          "type": "b",
+          "type": "Byte",
           "attributes": [],
           "shape": [1],
 ,
         {
           "name": "i16",
-          "type": "i",
+          "type": "Int16",
           "attributes": [],
           "shape": [1],
 ,
         {
           "name": "fooStr",
-          "type": "s",
+          "type": "String",
           "attributes": [],
           "shape": [1],
 
@@ -132,19 +132,19 @@
       "leaves": [
         {
           "name": "test_grid",
-          "type": "f",
+          "type": "Float64",
           "attributes": [],
           "shape": [36,18]
         },
         {
           "name": "longitude",
-          "type": "f",
+          "type": "Float64",
           "attributes": [],
           "shape": [36]
         },
         {
           "name": "latitude",
-          "type": "f",
+          "type": "Float64",
           "attributes": [],
           "shape": [18]
         }
