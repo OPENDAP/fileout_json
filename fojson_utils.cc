@@ -50,6 +50,14 @@ std::string escape_for_json(const std::string &input) {
     return ss.str();
 }
 
+/**
+ * Compute the constrained shape of the Array and return it in a vector.
+ * Also return the total number of elements in the constrained array.
+ *
+ * @param a The Array to examine
+ * @param shape The shape of the Array, taking into account the constraint
+ * @return The total number of elements in the constrained Array.
+ */
 long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape ){
     BESDEBUG(utils_debug_key, "fojson::computeConstrainedShape() - BEGIN. Array name: "<< a->name() << endl);
 
@@ -63,8 +71,6 @@ long computeConstrainedShape(libdap::Array *a, std::vector<unsigned int> *shape 
     long totalSize = 1;
 
     BESDEBUG(utils_debug_key, "fojson::computeConstrainedShape() - Array has " << a->dimensions(true) << " dimensions."<< endl);
-
-    stringstream msg;
 
     for(dIt = a->dim_begin() ; dIt!=a->dim_end() ;dIt++){
         BESDEBUG(utils_debug_key, "fojson::computeConstrainedShape() - Processing dimension '" << a->dimension_name(dIt)<< "'. (dim# "<< dimNum << ")"<< endl);

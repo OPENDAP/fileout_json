@@ -60,34 +60,28 @@ using namespace std;
 /**
  * Writes out the values of an n-dimensional array. Uses recursion.
  */
-template<typename T> unsigned int FoJsonTransform::json_simple_type_array_worker(std::ostream *strm, T *values,
-        unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim)
+template<typename T> unsigned int FoJsonTransform::json_simple_type_array_worker(std::ostream *strm, const std::vector<T> &values,
+        unsigned int indx, const std::vector<unsigned int> &shape, unsigned int currentDim)
 {
-
     *strm << "[";
 
-    unsigned int currentDimSize = (*shape)[currentDim];
+    unsigned int currentDimSize = shape.at(currentDim);        // at is slower than [] but safe
 
-    for (int i = 0; i < currentDimSize; i++) {
-        if (currentDim < shape->size() - 1) {
+    for (unsigned int i = 0; i < currentDimSize; i++) {
+        if (currentDim < shape.size() - 1) {
             BESDEBUG(FoJsonTransform_debug_key,
-                    "json_simple_type_array_worker() - Recursing! indx:  " << indx << " currentDim: " << currentDim << " currentDimSize: " << currentDimSize << endl);
+                    "json_simple_type_array_worker() - Recursing! indx:  " << indx << " currentDim: " << currentDim
+                    << " currentDimSize: " << currentDimSize << endl);
+
             indx = json_simple_type_array_worker<T>(strm, values, indx, shape, currentDim + 1);
             if (i + 1 != currentDimSize) *strm << ", ";
         }
         else {
             if (i) *strm << ", ";
-            if (typeid(T) == typeid(std::string)) {
-                // Strings need to be escaped to be included in a JSON object.
-                std::string val = ((std::string *) values)[indx++];
-                *strm << "\"" << fojson::escape_for_json(val) << "\"";
-            }
-            else {
-                *strm << values[indx++];
-            }
+            *strm << values[indx++];
         }
-
     }
+
     *strm << "]";
 
     return indx;
@@ -104,37 +98,17 @@ template<typename T> unsigned int FoJsonTransform::json_simple_type_array_worker
 template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a, string indent,
         bool sendData)
 {
-
     *strm << indent << "\"" << a->name() + "\":  ";
 
     if (sendData) { // send data
-        int numDim = a->dimensions(true);
-        std::vector<unsigned int> shape(numDim);
+        std::vector<unsigned int> shape(a->dimensions(true));
         long length = fojson::computeConstrainedShape(a, &shape);
 
-        //*strm << "," << endl;
+        vector<T> src(length);
+        a->value(&src[0]);
+        unsigned int indx = json_simple_type_array_worker(strm, src, 0, shape, 0);
 
-        unsigned int indx;
-        if (typeid(T) == typeid(std::string)) {
-            // The string type utilizes a specialized version of libdap:Array.value()
-            vector<std::string> sourceValues;
-            a->value(sourceValues);
-            indx = json_simple_type_array_worker(strm, (std::string *) (&sourceValues[0]), 0, &shape, 0);
-        }
-        else {
-            T *src = new T[length];
-            a->value(src);
-            indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-            delete src;
-        }
-
-#if 0
-        T *src = new T[length];
-        a->value(src);
-        unsigned int indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-        delete src;
-#endif
-
+        // make this an assert?
         if (length != indx)
             BESDEBUG(FoJsonTransform_debug_key,
                     "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
@@ -143,8 +117,43 @@ template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *
         *strm << "{" << endl;
         //Attributes
         transform(strm, a->get_attr_table(), indent + _indent_increment);
-        *strm << endl;
-        *strm << indent << "}";
+        *strm << endl << indent << "}";
+    }
+}
+
+/**
+ * String version of json_simple_type_array(). This version exists because of the differing
+ * type signatures of the libdap::Vector::value() methods for numeric and c++ string types.
+ *
+ * @param strm Write to this stream
+ * @param a Source Array - write out data or metadata from or about this Array
+ * @param indent Indent the output so humans can make sense of it
+ * @param sendData True: send data; false: send metadata
+ */
+void FoJsonTransform::json_simple_type_array_string(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
+{
+    *strm << indent << "\"" << a->name() + "\":  ";
+
+    if (sendData) { // send data
+        std::vector<unsigned int> shape(a->dimensions(true));
+        long length = fojson::computeConstrainedShape(a, &shape);
+
+        // The string type utilizes a specialized version of libdap::Array::value()
+        std::vector<std::string> sourceValues;
+        a->value(sourceValues);
+
+        unsigned int indx = json_simple_type_array_worker(strm, sourceValues, 0, shape, 0);
+
+        // make this an assert?
+        if (length != indx)
+            BESDEBUG(FoJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  "
+                    << indx << "  length: " << length << endl);
+    }
+    else { // otherwise send metadata
+        *strm << "{" << endl;
+        //Attributes
+        transform(strm, a->get_attr_table(), indent + _indent_increment);
+        *strm << endl << indent << "}";
     }
 }
 
@@ -162,9 +171,11 @@ template<typename T> void FoJsonTransform::json_simple_type_array(std::ostream *
  * @throws BESInternalError if dds provided is empty or not read, if the
  * file is not specified or failed to create the netcdf file
  */
-FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
+FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, const string &localfile) :
         _dds(dds), _localfile(localfile), _indent_increment(" "), _ostrm(0)
 {
+    // I'd make these asserts - ctors generally shoulf not throw exceptions if it can be helped
+    // jhrg 3/11/5
     if (!_dds) throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
     if (_localfile.empty())
         throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
@@ -181,9 +192,10 @@ FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi,
  * @param dhi
  * @param ostrm
  */
-FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm) :
+FoJsonTransform::FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
         _dds(dds), _localfile(""), _indent_increment(" "), _ostrm(ostrm)
 {
+    // assert
     if (!_dds) throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
 }
 
@@ -584,7 +596,7 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
         break;
 
     case libdap::dods_str_c: {
-        json_simple_type_array<std::string>(strm, a, indent, sendData);
+        json_simple_type_array_string(strm, a, indent, sendData);
         break;
 #if 0
         //json_simple_type_array<Str>(strm,a,indent);
@@ -596,7 +608,8 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::Array *a, string ind
     }
 
     case libdap::dods_url_c: {
-        json_simple_type_array<std::string>(strm, a, indent, sendData);
+        //json_simple_type_array<std::string>(strm, a, indent, sendData);
+        json_simple_type_array_string(strm, a, indent, sendData);
         break;
 #if 0
         //json_simple_type_array<Url>(strm,a,indent);
@@ -712,8 +725,8 @@ void FoJsonTransform::transform(std::ostream *strm, libdap::AttrTable &attr_tabl
                 // Open values array
                 *strm << "[";
                 // Process value(s)
-                vector<string> *values = attr_table.get_attr_vector(at_iter);
-                for (int i = 0; i < values->size(); i++) {
+                std::vector<std::string> *values = attr_table.get_attr_vector(at_iter);
+                for (std::vector<std::string>::size_type i = 0; i < values->size(); i++) {
                     if (i > 0) *strm << ",";
                     if (attr_table.get_attr_type(at_iter) == libdap::Attr_string
                             || attr_table.get_attr_type(at_iter) == libdap::Attr_url) {
