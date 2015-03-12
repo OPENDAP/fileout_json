@@ -411,7 +411,7 @@ void FoDapJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Bas
 	*strm << indent << "\"leaves\": [";
 	if(leaves.size() > 0)
 		*strm << endl;
-	for(std::vector<libdap::BaseType>::size_type l=0; l< leaves.size(); l++){
+	for(std::vector<libdap::BaseType *>::size_type l=0; l< leaves.size(); l++){
 		libdap::BaseType *v = leaves[l];
 		BESDEBUG(FoDapJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
 		if( l>0 ){
@@ -429,7 +429,7 @@ void FoDapJsonTransform::transform_node_worker(ostream *strm, vector<libdap::Bas
 	*strm << indent << "\"nodes\": [";
 	if(nodes.size() > 0)
 		*strm << endl;
-	for(std::vector<libdap::BaseType>::size_type n=0; n< nodes.size(); n++){
+	for(std::vector<libdap::BaseType *>::size_type n=0; n< nodes.size(); n++){
 		libdap::BaseType *v = nodes[n];
 		transform(strm, v, indent + _indent_increment, sendData);
 	}
