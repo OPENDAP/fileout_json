@@ -18,7 +18,7 @@
   "leaves": [
     {
       "name": "u",
-      "type": "i",
+      "type": "Int16",
       "attributes": [
         {"name": "units", "value": ["meter per second"]},
         {"name": "long_name", "value": ["Vector wind eastward component"]},
@@ -30,7 +30,7 @@
     },
     {
       "name": "v",
-      "type": "i",
+      "type": "Int16",
       "attributes": [
         {"name": "units", "value": ["meter per second"]},
         {"name": "long_name", "value": ["Vector wind northward component"]},
@@ -42,7 +42,7 @@
     },
     {
       "name": "lat",
-      "type": "f",
+      "type": "Float32",
       "attributes": [
         {"name": "units", "value": ["degree North"]}
       ],
@@ -51,7 +51,7 @@
     },
     {
       "name": "lon",
-      "type": "f",
+      "type": "Float32",
       "attributes": [
         {"name": "units", "value": ["degree East"]}
       ],
@@ -60,7 +60,7 @@
     },
     {
       "name": "time",
-      "type": "f",
+      "type": "Float32",
       "attributes": [
         {"name": "units", "value": ["hours from base_time"]}
       ],

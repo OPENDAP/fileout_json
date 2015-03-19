@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoW10JsonTransmitter.h
+// FoInstanceJsonTransmitter.h
 //
 // This file is part of BES JSON File Out Module
 //
@@ -26,9 +26,8 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
-#ifndef A_FoW10nJsonTransmitter_h
-#define A_FoW10nJsonTransmitter_h 1
+#ifndef A_FoInstanceJsonTransmitter_h
+#define A_FoInstanceJsonTransmitter_h 1
 
 #include <DataDDS.h>
 #include <ConstraintEvaluator.h>
@@ -39,29 +38,28 @@ class BESContainer;
 
 using namespace libdap;
 
-
 /** @brief BESTransmitter class named "json" that transmits an OPeNDAP
  * data object as a JSON file
  *
- * The FoW10JsonTransmitter transforms an OPeNDAP DataDDS object into a
+ * The FoJsonTransmitter transforms an OPeNDAP DataDDS object into a
  * JSON file and streams the new (temporary) JSON file back to the
  * client.
  *
  * @see BESBasicTransmitter
  */
-class FoW10nJsonTransmitter: public BESBasicTransmitter {
+class FoInstanceJsonTransmitter: public BESBasicTransmitter {
 private:
-    static void return_temp_stream(const string &filename, ostream &strm);
-    static string temp_dir;
+	static string temp_dir;
+
+	static void return_temp_stream(const string &filename, ostream &strm);
 
 public:
-    FoW10nJsonTransmitter();
-    virtual ~FoW10nJsonTransmitter() { }
+	FoInstanceJsonTransmitter();
+	virtual ~FoInstanceJsonTransmitter() { }
 
-    static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    //static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
+	static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
+	static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
+	// static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
-#endif // A_FoW10nJsonTransmitter_h
-
+#endif // A_FoInstanceJsonTransmitter_h

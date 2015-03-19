@@ -17,7 +17,7 @@
   "leaves": [
     {
       "name": "COADSX",
-      "type": "f",
+      "type": "Float64",
       "attributes": [
         {"name": "units", "value": ["degrees_east"]},
         {"name": "modulo", "value": [" "]},
@@ -27,7 +27,7 @@
     },
     {
       "name": "COADSY",
-      "type": "f",
+      "type": "Float64",
       "attributes": [
         {"name": "units", "value": ["degrees_north"]},
         {"name": "point_spacing", "value": ["even"]}
@@ -36,7 +36,7 @@
     },
     {
       "name": "TIME",
-      "type": "f",
+      "type": "Float64",
       "attributes": [
         {"name": "units", "value": ["hour since 0000-01-01 00:00:00"]},
         {"name": "time_origin", "value": ["1-JAN-0000 00:00:00"]},
@@ -52,7 +52,7 @@
       "leaves": [
         {
           "name": "SST",
-          "type": "f",
+          "type": "Float32",
           "attributes": [
             {"name": "missing_value", "value": [-9.99999979e+33]},
             {"name": "_FillValue", "value": [-9.99999979e+33]},
@@ -64,7 +64,7 @@
         },
         {
           "name": "TIME",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["hour since 0000-01-01 00:00:00"]},
             {"name": "time_origin", "value": ["1-JAN-0000 00:00:00"]},
@@ -74,7 +74,7 @@
         },
         {
           "name": "COADSY",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_north"]},
             {"name": "point_spacing", "value": ["even"]}
@@ -83,7 +83,7 @@
         },
         {
           "name": "COADSX",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_east"]},
             {"name": "modulo", "value": [" "]},
@@ -100,7 +100,7 @@
       "leaves": [
         {
           "name": "AIRT",
-          "type": "f",
+          "type": "Float32",
           "attributes": [
             {"name": "missing_value", "value": [-9.99999979e+33]},
             {"name": "_FillValue", "value": [-9.99999979e+33]},
@@ -112,7 +112,7 @@
         },
         {
           "name": "TIME",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["hour since 0000-01-01 00:00:00"]},
             {"name": "time_origin", "value": ["1-JAN-0000 00:00:00"]},
@@ -122,7 +122,7 @@
         },
         {
           "name": "COADSY",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_north"]},
             {"name": "point_spacing", "value": ["even"]}
@@ -131,7 +131,7 @@
         },
         {
           "name": "COADSX",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_east"]},
             {"name": "modulo", "value": [" "]},
@@ -148,7 +148,7 @@
       "leaves": [
         {
           "name": "UWND",
-          "type": "f",
+          "type": "Float32",
           "attributes": [
             {"name": "missing_value", "value": [-9.99999979e+33]},
             {"name": "_FillValue", "value": [-9.99999979e+33]},
@@ -160,7 +160,7 @@
         },
         {
           "name": "TIME",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["hour since 0000-01-01 00:00:00"]},
             {"name": "time_origin", "value": ["1-JAN-0000 00:00:00"]},
@@ -170,7 +170,7 @@
         },
         {
           "name": "COADSY",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_north"]},
             {"name": "point_spacing", "value": ["even"]}
@@ -179,7 +179,7 @@
         },
         {
           "name": "COADSX",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_east"]},
             {"name": "modulo", "value": [" "]},
@@ -196,7 +196,7 @@
       "leaves": [
         {
           "name": "VWND",
-          "type": "f",
+          "type": "Float32",
           "attributes": [
             {"name": "missing_value", "value": [-9.99999979e+33]},
             {"name": "_FillValue", "value": [-9.99999979e+33]},
@@ -208,7 +208,7 @@
         },
         {
           "name": "TIME",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["hour since 0000-01-01 00:00:00"]},
             {"name": "time_origin", "value": ["1-JAN-0000 00:00:00"]},
@@ -218,7 +218,7 @@
         },
         {
           "name": "COADSY",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_north"]},
             {"name": "point_spacing", "value": ["even"]}
@@ -227,7 +227,7 @@
         },
         {
           "name": "COADSX",
-          "type": "f",
+          "type": "Float64",
           "attributes": [
             {"name": "units", "value": ["degrees_east"]},
             {"name": "modulo", "value": [" "]},

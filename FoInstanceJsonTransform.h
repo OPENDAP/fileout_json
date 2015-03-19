@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset:4 -*-
 //
-// FoJsonTransform.h
+// FoInstanceJsonTransform.h
 //
 // This file is part of BES JSON File Out Module
 //
@@ -26,8 +26,8 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-#ifndef FoJsonTransfrom_h_
-#define FoJsonTransfrom_h_ 1
+#ifndef FoInstanceJsonTransfrom_h_
+#define FoInstanceJsonTransfrom_h_ 1
 
 #include <string>
 #include <vector>
@@ -46,7 +46,7 @@
  * The output is written to a local file whose name is passed as a parameter
  * to the constructor.
  */
-class FoJsonTransform: public BESObj
+class FoInstanceJsonTransform: public BESObj
 {
 private:
     libdap::DDS *_dds;
@@ -60,7 +60,7 @@ private:
             const std::vector<unsigned int> &shape, unsigned int currentDim);
 
     template<typename T> void json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
-    void json_simple_type_array_string(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
+    void json_string_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
 
 #if 0
     unsigned int json_simple_type_array_worker_string(std::ostream *strm, const vector<std::string> &values,
@@ -78,15 +78,15 @@ private:
     void transform(std::ostream *strm, libdap::AttrTable &attr_table, std::string indent);
 
 public:
-    FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
-    FoJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
+    FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
+    FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
 
-    virtual ~FoJsonTransform();
+    virtual ~FoInstanceJsonTransform();
 
     virtual void transform(bool sendData);
 
     virtual void dump(std::ostream &strm) const;
 };
 
-#endif // FoJsonTransfrom_h_
+#endif // FoInstanceJsonTransfrom_h_
 
