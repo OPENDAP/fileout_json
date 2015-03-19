@@ -39,8 +39,7 @@ UNIT_TESTS = FoJsonTest
 
 OBJS = ../FoJsonTransform.o ../FoW10nJsonTransform.o ../fojson_utils.o
 
-
-FoJsonTest_SOURCES = FoJsonTest.cc ($SRCS)
+FoJsonTest_SOURCES = FoJsonTest.cc
 FoJsonTest_LDADD = $(OBJS) $(LIBADD)
 
 noinst_HEADERS = test_config.h
