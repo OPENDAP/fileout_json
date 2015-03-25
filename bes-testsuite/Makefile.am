@@ -46,7 +46,8 @@ bes.conf: $(BES_CONF_IN) $(top_srcdir)/configure.ac
 AUTOM4TE = autom4te
 
 TESTSUITE = $(srcdir)/fileout_jsonTest
-TESTSUITEFLAGS = -j9
+TESTSUITEFLAGS =
+# -j9
 
 check-local: atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
