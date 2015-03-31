@@ -35,7 +35,19 @@ TESTS = $(UNIT_TESTS)
 # Unit Tests
 #
 
+if CPPUNIT
 UNIT_TESTS = FoJsonTest
+else
+UNIT_TESTS =
+
+check-local:
+	@echo ""
+	@echo "**********************************************************"
+	@echo "You must have cppunit 1.12.x or greater installed to run *"
+	@echo "check target in unit-tests directory                     *"
+	@echo "**********************************************************"
+	@echo ""
+endif
 
 OBJS = ../FoDapJsonTransform.o ../fojson_utils.o ../FoInstanceJsonTransform.o 
 
