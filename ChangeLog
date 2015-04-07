@@ -1,3 +1,144 @@
+2015-03-31  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed a problem with make check
+	It failed when CppUnit was not present. Now those tests
+	are ignored.
+
+2015-03-25  James Gallagher  <jgallagher@opendap.org>
+
+	Accommodate autoconf 2.63
+	Removed -j7 from TESTSUITEFLAGS. Can still pass them in from
+	the command line (make check TESTSUITEFLAGS=-j7).
+
+2015-03-19  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/fileout_json
+	Conflicts:
+		unit-tests/Makefile.am
+
+	Modified Makefile.am for distcheck combined with the modules build of the BES
+
+2015-03-18  James Gallagher  <jgallagher@opendap.org>
+
+	misspelled name in a Makefile
+
+2015-03-12  Nathan Potter  <ndp@opendap.org>
+
+	Fixed bug in loop
+
+2015-03-11  Nathan Potter  <ndp@opendap.org>
+
+	Renamed FoJsonTransform* and FoJsonTransmitter* to
+	FoInstanceJsonTransform* and FoInstanceJsonTransmitter*
+	respectively to better reflect the classes actual functionality.
+	Also added string escaping to all object names in the
+	ijson (FoJsonTransmitter) output to protect from crazy variable
+	names breaking the validitiy of the returned JSON content.
+
+	Renamed FoW10nJson* to FoDapJson* to better represent the actual
+	functionallity of the classes. Made the json 'type' properties
+	match the DAP types os the associated variables. Fixed baselines
+	and testing regalia.
+
+	Renamed array functions in a more understandable manner.
+
+	Added special method for arrays of strings. Tidied up use of std::
+	for string, Debug statements, etc.
+
+2015-03-11  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed an issue with libdap::Vector::value()
+	Code in FoJsonTransform inadvertently built a call to a non-existent
+	version of libdap::Vector:value. I specialized the
+	json_simple_type_array() method as a work-around.
+
+2015-02-20  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed error in test baseline
+	The test baseline abstract_object_test_DATA.json.baseline
+	used six escaped double quotes that are not in the output. I
+	think the escaped double quotes was something that was an issue
+	but which was fixed. I modified the baseline, so the test passes,
+	by removing the extra (escaped) double quotes.
+
+	Fixed namespace error
+	The function escape_for_json in namespace fojson was
+	declared as string function(string &) but defined as
+	string function(const string &). Different type signatures
+	== different functions. So the problem was not really a
+	namespace issue at all.
+
+2015-02-20  Nathan Potter  <ndp@opendap.org>
+
+	Fixes to fojson to correctly escape strings, and support for arrays of sting and url
+
+	Fixes to fojson to correctly escape strings, and support for arrays of sting and url
+
+2015-02-11  James Gallagher  <jgallagher@opendap.org>
+
+	Added to gitignore
+
+2015-02-02  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/fileout_json
+
+2015-02-02  Nathan Potter  <ndp@opendap.org>
+
+	Repaired production rules so distclean works correctly.
+
+2015-01-29  Nathan Potter  <ndp@opendap.org>
+
+	fileout_json: Removed copy-pasta cruft that incorrectly identified the project as fileout_netcdf
+
+2015-01-16  James Gallagher  <jgallagher@opendap.org>
+
+	Removed dist-hook which as a hack for SVN
+
+	Removed use of case libdap::dods_url4_c
+	This type constant was removed from libdap.
+
+2014-12-31  James Gallagher  <jgallagher@opendap.org>
+
+	Merge remote-tracking branch 'origin/dap4'
+
+2014-12-13  James Gallagher  <jgallagher@opendap.org>
+
+	Remove package.m4 from the repo
+
+2014-12-12  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed configure.ac after the merge with the modules branch.
+
+2014-12-07  James Gallagher  <jgallagher@opendap.org>
+
+	Added module name and version info to Makefile.am
+	This change was made to support the modules build where the autoconf
+	symbols PACKAGE_NAME and _MODULE are defined by the bes configure
+	script. This meant that the version response from the bes was useless
+	since it listed every module as 'bes' and gave the bes' version
+	number.
+
+2014-11-24  James Gallagher  <jgallagher@opendap.org>
+
+	Build changes.
+	Tweaked	the config.status dep so that it includes $(top_srcdir).
+	Added the new bes.conf.modules.in to EXTRA_DIST	  in Makefile.am.
+
+2014-11-22  James Gallagher  <jgallagher@opendap.org>
+
+	Added bes.conf.modules.in
+	Needed for the modules build.
+
+2014-11-21  James Gallagher  <jgallagher@opendap.org>
+
+	Added tmp using the .gitignore trick to add empty dirs
+
+	Changes for the 'modules' build.
+
+2014-09-03  James Gallagher  <jgallagher@opendap.org>
+
+	Branch for DAP4
+	A    https://scm.opendap.org/svn/branch/fileout_json/dap4
 2014-08-08  James Gallagher <jgallagher@opendap.org>
 
 	Removed old code and fixed a typo that introduced a double-free bug.
