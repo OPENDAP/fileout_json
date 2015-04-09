@@ -21,7 +21,7 @@ endif
 CXXFLAGS_DEBUG = -g3 -O0  -Wall -W -Wcast-align -Werror
 TEST_COV_FLAGS = -ftest-coverage -fprofile-arcs
 
-DISTCLEANFILES = test_config.h
+DISTCLEANFILES = test_config.h *.Po
 
 CLEANFILES = *.dbg *.log tmp/*
 
