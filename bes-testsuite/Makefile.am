@@ -49,12 +49,13 @@ TESTSUITE = $(srcdir)/fileout_jsonTest
 TESTSUITEFLAGS =
 # -j9
 
-check-local: atlocal $(TESTSUITE)
+check-local: atlocal $(srcdir)/package.m4 $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
 clean-local:
 	test ! -f '$(TESTSUITE)' || $(SHELL) '$(TESTSUITE)' --clean
-
+	-rm $(srcdir)/package.m4 
+	
 distclean-local:
 	-rm atconfig
 
