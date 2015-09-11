@@ -19,12 +19,12 @@ TEST_COV_FLAGS = -ftest-coverage -fprofile-arcs
 
 noinst_DATA = bes.conf
 
-CLEANFILES = *.log *.sum site.exp gmon.*
+CLEANFILES = *.log *.sum gmon.* $(TESTSUITE) $(srcdir)/package.m4
 
 EXTRA_DIST = json $(TESTSUITE).at $(TESTSUITE) atlocal.in \
 $(srcdir)/package.m4 bes.conf.in bes.conf.modules.in 
 
-DISTCLEANFILES = bes.conf
+DISTCLEANFILES = bes.conf atconfig
 
 if DAP_MODULES
 BES_CONF_IN = bes.conf.modules.in
@@ -54,10 +54,6 @@ check-local: atlocal $(srcdir)/package.m4 $(TESTSUITE)
 
 clean-local:
 	test ! -f '$(TESTSUITE)' || $(SHELL) '$(TESTSUITE)' --clean
-	-rm $(srcdir)/package.m4 
-	
-distclean-local:
-	-rm atconfig
 
 AUTOTEST = $(AUTOM4TE) --language=autotest
 $(TESTSUITE): $(srcdir)/fileout_jsonTest.at $(srcdir)/package.m4
