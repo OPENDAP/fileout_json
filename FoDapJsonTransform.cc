@@ -26,9 +26,9 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
-#include "FoDapJsonTransform.h"
 #include "config.h"
+
+#include <cassert>
 
 #include <sstream>
 #include <iostream>
@@ -40,13 +40,13 @@
 using std::ostringstream;
 using std::istringstream;
 
-
 #include <DDS.h>
 #include <Structure.h>
 #include <Constructor.h>
 #include <Array.h>
 #include <Grid.h>
 #include <Sequence.h>
+#include <Float64.h>
 #include <Str.h>
 #include <Url.h>
 
@@ -58,89 +58,156 @@ using std::istringstream;
 
 #define FoDapJsonTransform_debug_key "fojson"
 
+const int int_64_precision = 15; // 15 digits to the right of the decimal point. jhrg 9/14/15
 
 /**
  *  @TODO Handle String and URL Arrays including backslash escaping double quotes in values.
  *
  */
-template<typename T> unsigned  int FoDapJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx, vector<unsigned int> *shape, unsigned int currentDim){
+template<typename T>
+unsigned int FoDapJsonTransform::json_simple_type_array_worker(ostream *strm, T *values, unsigned int indx,
+    vector<unsigned int> *shape, unsigned int currentDim)
+{
+    *strm << "[";
 
-	*strm << "[";
+    unsigned int currentDimSize = (*shape)[currentDim];
 
-	unsigned int currentDimSize = (*shape)[currentDim];
-
-    for(unsigned int i=0; i<currentDimSize ;i++){
-		if(currentDim < shape->size()-1){
-			BESDEBUG(FoDapJsonTransform_debug_key, "json_simple_type_array_worker() - Recursing! indx:  " << indx
-					<< " currentDim: " << currentDim
-					<< " currentDimSize: " << currentDimSize
-					<< endl);
-			indx = json_simple_type_array_worker<T>(strm,values,indx,shape,currentDim+1);
-			if(i+1 != currentDimSize)
-		    	*strm << ", ";
-		}
-		else {
-	    	if(i)
-		    	*strm << ", ";
-	    	if(typeid(T) == typeid(std::string)){
-	    		// Strings need to be escaped to be included in a JSON object.
-	    		std::string val = ((std::string *) values)[indx++];
-				*strm << "\"" << fojson::escape_for_json( val )<< "\"";
-	    	}
-	    	else {
-				*strm << values[indx++];
-	    	}
-		}
+    for (unsigned int i = 0; i < currentDimSize; i++) {
+        if (currentDim < shape->size() - 1) {
+            BESDEBUG(FoDapJsonTransform_debug_key,
+                "json_simple_type_array_worker() - Recursing! indx:  " << indx << " currentDim: " << currentDim << " currentDimSize: " << currentDimSize << endl);
+            indx = json_simple_type_array_worker<T>(strm, values, indx, shape, currentDim + 1);
+            if (i + 1 != currentDimSize) *strm << ", ";
+        }
+        else {
+            if (i) *strm << ", ";
+            if (typeid(T) == typeid(std::string)) {
+                // Strings need to be escaped to be included in a JSON object.
+                string val = reinterpret_cast<string*>(values)[indx++]; // ((string *) values)[indx++];
+                *strm << "\"" << fojson::escape_for_json(val) << "\"";
+            }
+            else {
+                *strm << values[indx++];
+            }
+        }
     }
-	*strm << "]";
+    *strm << "]";
 
-	return indx;
+    return indx;
 }
 
+#if 0
+/**
+ * This is an alternative to the if (typeid(T)... code. This uses a specialized
+ * version of the template function. The same syntax will work for a template
+ * class... However, given the small change and that this code is UI code, I
+ * think the typeid() stuff is easier to follow.
+ *
+ * @param strm
+ * @param values
+ * @param indx
+ * @param shape
+ * @param currentDim
+ * @return
+ */
+template<>
+unsigned int FoDapJsonTransform::json_simple_type_array_worker<libdap::dods_float64>(ostream *strm, libdap::dods_float64 *values, unsigned int indx,
+    vector<unsigned int> *shape, unsigned int currentDim)
+{
+    std::streamsize prec = strm->precision(int_64_precision);
 
+    *strm << "[";
+
+    unsigned int currentDimSize = (*shape)[currentDim];
+
+    for (unsigned int i = 0; i < currentDimSize; i++) {
+        if (currentDim < shape->size() - 1) {
+            indx = json_simple_type_array_worker<libdap::dods_float64>(strm, values, indx, shape, currentDim + 1);
+            if (i + 1 != currentDimSize) *strm << ", ";
+        }
+        else {
+            if (i) *strm << ", ";
+            *strm << values[indx++];
+        }
+    }
+    *strm << "]";
+
+    // reset output precision
+    strm->precision(prec);
+
+    return indx;
+}
+#endif
 
 /**
  * Writes the json representation of the passed DAP Array of simple types. If the
  * parameter "sendData" evaluates to true then data will also be sent.
  */
-template<typename T>void FoDapJsonTransform::json_simple_type_array(ostream *strm, libdap::Array *a, string indent, bool sendData){
+template<typename T> void FoDapJsonTransform::json_simple_type_array(ostream *strm, libdap::Array *a, string indent,
+    bool sendData)
+{
 
+    *strm << indent << "{" << endl;\
+    string childindent = indent + _indent_increment;
 
-	*strm << indent << "{" << endl;\
+    writeLeafMetadata(strm, a, childindent);
 
-	string childindent = indent + _indent_increment;
+    int numDim = a->dimensions(true);
+    vector<unsigned int> shape(numDim);
+    long length = fojson::computeConstrainedShape(a, &shape);
 
-	writeLeafMetadata(strm,a,childindent);
+    *strm << childindent << "\"shape\": [";
 
-	int numDim = a->dimensions(true);
-	vector<unsigned int> shape(numDim);
-	long length = fojson::computeConstrainedShape(a, &shape);
+    for (std::vector<unsigned int>::size_type i = 0; i < shape.size(); i++) {
+        if (i > 0) *strm << ",";
+        *strm << shape[i];
+    }
+    *strm << "]";
 
-	*strm << childindent << "\"shape\": [";
+    if (sendData) {
+        *strm << "," << endl;
 
-	for(std::vector<unsigned int>::size_type i=0; i<shape.size() ;i++){
-		if(i>0)
-			*strm << ",";
-		*strm << shape[i];
-	}
-	*strm << "]";
+        // Data
+        *strm << childindent << "\"data\": ";
+        unsigned int indx = 0;
+#if 0
+        T *src = new T[length]; //vector FIXME
+        a->value(src);
+#endif
+        vector<T> src(length);
+        a->value(&src[0]);
 
-	if(sendData){
-		*strm << ","<< endl;
+        // I added this, and a corresponding block in FoInstance... because I fixed
+        // an issue in libdap::Float64 where the precision was not properly reset
+        // in it's print_val() method. Because of that error, precision was (left at)
+        // 15 when this code was called until I fixed that method. Then this code
+        // was not printing at the required precision. jhrg 9/14/15
+        if (typeid(T) == typeid(libdap::dods_float64)) {
+            streamsize prec = strm->precision(int_64_precision);
+            try {
+                indx = json_simple_type_array_worker(strm, &src[0], 0, &shape, 0);
+                strm->precision(prec);
+            }
+            catch(...) {
+                strm->precision(prec);
+                throw;
+            }
+        }
+        else {
+            indx = json_simple_type_array_worker(strm, &src[0], 0, &shape, 0);
+        }
+#if 0
+        delete src;
+#endif
+        assert(length == indx);
+#if 0
+        if (length != indx)
+            BESDEBUG(FoDapJsonTransform_debug_key,
+                "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+#endif
+    }
 
-		// Data
-		*strm << childindent << "\"data\": ";
-        unsigned int indx;
-		T *src = new T[length];
-		a->value(src);
-		indx = json_simple_type_array_worker(strm, src, 0, &shape, 0);
-		delete src;
-
-	    if(length != indx)
-			BESDEBUG(FoDapJsonTransform_debug_key, "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
-	}
-
-	*strm << endl << indent << "}";
+    *strm << endl << indent << "}";
 
 }
 /**
@@ -155,60 +222,57 @@ template<typename T>void FoDapJsonTransform::json_simple_type_array(ostream *str
 void FoDapJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, string indent, bool sendData)
 {
 
-	*strm << indent << "{" << endl;\
+    *strm << indent << "{" << endl;\
+    string childindent = indent + _indent_increment;
 
-	string childindent = indent + _indent_increment;
+    writeLeafMetadata(strm, a, childindent);
 
-	writeLeafMetadata(strm,a,childindent);
+    int numDim = a->dimensions(true);
+    vector<unsigned int> shape(numDim);
+    long length = fojson::computeConstrainedShape(a, &shape);
 
-	int numDim = a->dimensions(true);
-	vector<unsigned int> shape(numDim);
-	long length = fojson::computeConstrainedShape(a, &shape);
+    *strm << childindent << "\"shape\": [";
 
-	*strm << childindent << "\"shape\": [";
+    for (std::vector<unsigned int>::size_type i = 0; i < shape.size(); i++) {
+        if (i > 0) *strm << ",";
+        *strm << shape[i];
+    }
+    *strm << "]";
 
-	for(std::vector<unsigned int>::size_type i=0; i<shape.size() ;i++){
-		if(i>0)
-			*strm << ",";
-		*strm << shape[i];
-	}
-	*strm << "]";
+    if (sendData) {
+        *strm << "," << endl;
 
-	if(sendData){
-		*strm << ","<< endl;
-
-		// Data
-		*strm << childindent << "\"data\": ";
+        // Data
+        *strm << childindent << "\"data\": ";
         unsigned int indx;
 
-		// The string type utilizes a specialized version of libdap:Array.value()
-		vector<std::string> sourceValues;
-		a->value(sourceValues);
-		indx = json_simple_type_array_worker(strm, (std::string *)(&sourceValues[0]), 0, &shape, 0);
+        // The string type utilizes a specialized version of libdap:Array.value()
+        vector<std::string> sourceValues;
+        a->value(sourceValues);
+        indx = json_simple_type_array_worker(strm, (std::string *) (&sourceValues[0]), 0, &shape, 0);
 
-	    if(length != indx)
-			BESDEBUG(FoDapJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+        if (length != indx)
+            BESDEBUG(FoDapJsonTransform_debug_key,
+                "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 
+    }
 
-	}
-
-	*strm << endl << indent << "}";
+    *strm << endl << indent << "}";
 
 }
-
-
 
 /**
  * Writes the json opener for the Dataset, including name and top level DAP attributes.
  */
-void FoDapJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, string indent){
+void FoDapJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, string indent)
+{
 
-	// Name
-	*strm << indent << "\"name\": \""<< dds->get_dataset_name() << "\"," << endl;
+    // Name
+    *strm << indent << "\"name\": \"" << dds->get_dataset_name() << "\"," << endl;
 
-	//Attributes
-	transform(strm, dds->get_attr_table(), indent);
-	*strm << "," << endl;
+    //Attributes
+    transform(strm, dds->get_attr_table(), indent);
+    *strm << "," << endl;
 
 }
 
@@ -216,16 +280,15 @@ void FoDapJsonTransform::writeDatasetMetadata(ostream *strm, libdap::DDS *dds, s
  * Writes json opener for a DAP object that is seen as a "node" in w10n semantics.
  * Header includes object name and attributes
  */
-void FoDapJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt, string indent){
+void FoDapJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt, string indent)
+{
 
-	// Name
-	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
+    // Name
+    *strm << indent << "\"name\": \"" << bt->name() << "\"," << endl;
 
-	//Attributes
-	transform(strm, bt->get_attr_table(), indent);
-	*strm << "," << endl;
-
-
+    //Attributes
+    transform(strm, bt->get_attr_table(), indent);
+    *strm << "," << endl;
 
 }
 
@@ -233,33 +296,26 @@ void FoDapJsonTransform::writeNodeMetadata(ostream *strm, libdap::BaseType *bt, 
  * Writes json opener for a DAP object that is seen as a "leaf" in w10n semantics.
  * Header includes object name. attributes, and  type.
  */
-void FoDapJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt, string indent){
+void FoDapJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt, string indent)
+{
 
-	// Name
-	*strm << indent << "\"name\": \""<< bt->name() << "\"," << endl;
+    // Name
+    *strm << indent << "\"name\": \"" << bt->name() << "\"," << endl;
 
+    // type
+    if (bt->type() == libdap::dods_array_c) {
+        libdap::Array *a = (libdap::Array *) bt;
+        *strm << indent << "\"type\": \"" << a->var()->type_name() << "\"," << endl;
+    }
+    else {
+        *strm << indent << "\"type\": \"" << bt->type_name() << "\"," << endl;
+    }
 
-
-	// type
-	if(bt->type() == libdap::dods_array_c){
-		libdap::Array *a = (libdap::Array *)bt;
-		*strm << indent << "\"type\": \""<< a->var()->type_name() << "\"," << endl;
-	}
-	else {
-		*strm << indent << "\"type\": \""<< bt->type_name() << "\"," << endl;
-	}
-
-
-	//Attributes
-	transform(strm, bt->get_attr_table(), indent);
-	*strm << "," << endl;
-
-
+    //Attributes
+    transform(strm, bt->get_attr_table(), indent);
+    *strm << "," << endl;
 
 }
-
-
-
 
 /** @brief Constructor that creates transformation object from the specified
  * DataDDS object to the specified file
@@ -272,24 +328,21 @@ void FoDapJsonTransform::writeLeafMetadata(ostream *strm, libdap::BaseType *bt, 
  * @throws BESInternalError if dds provided is empty or not read, if the
  * file is not specified or failed to create the netcdf file
  */
-FoDapJsonTransform::FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const string &localfile) :
-        _dds(dds), _localfile(localfile), _indent_increment("  "), _ostrm(0)
+FoDapJsonTransform::FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, const string &localfile) :
+    _dds(dds), _localfile(localfile), _indent_increment("  "), _ostrm(0)
 {
-    if (!_dds)
-        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
+    if (!_dds) throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
 
     if (_localfile.empty())
         throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
 }
 
 FoDapJsonTransform::FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
-        _dds(dds), _localfile(""), _indent_increment("  "), _ostrm(ostrm)
+    _dds(dds), _localfile(""), _indent_increment("  "), _ostrm(ostrm)
 {
-    if (!_dds)
-        throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
+    if (!_dds) throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
 
-    if (!_ostrm)
-    	throw BESInternalError("File out JSON, null stream pointer passed to constructor", __FILE__, __LINE__);
+    if (!_ostrm) throw BESInternalError("File out JSON, null stream pointer passed to constructor", __FILE__, __LINE__);
 }
 
 /** @brief Destructor
@@ -314,14 +367,11 @@ void FoDapJsonTransform::dump(ostream &strm) const
     strm << BESIndent::LMarg << "FoDapJsonTransform::dump - (" << (void *) this << ")" << endl;
     BESIndent::Indent();
     strm << BESIndent::LMarg << "temporary file = " << _localfile << endl;
-    if(_dds != 0){
+    if (_dds != 0) {
         _dds->print(strm);
     }
     BESIndent::UnIndent();
 }
-
-
-
 
 /** @brief Transforms each of the marked variables of the DataDDS to the JSON
  * file.
@@ -334,70 +384,65 @@ void FoDapJsonTransform::dump(ostream &strm) const
 void FoDapJsonTransform::transform(bool sendData)
 {
     // used to ensure the _ostrm is closed only when it's a temp file
-	bool used_temp_file = false;
-	fstream temp_file;
+    bool used_temp_file = false;
+    fstream temp_file;
 
-	if (!_ostrm) {
-		temp_file.open(_localfile.c_str(), std::fstream::out);
-		if (!temp_file)
-			throw BESInternalError("Could not open temp file: " + _localfile, __FILE__, __LINE__);
-		_ostrm = &temp_file;
-		used_temp_file = true;
-	}
+    if (!_ostrm) {
+        temp_file.open(_localfile.c_str(), std::fstream::out);
+        if (!temp_file) throw BESInternalError("Could not open temp file: " + _localfile, __FILE__, __LINE__);
+        _ostrm = &temp_file;
+        used_temp_file = true;
+    }
 
-	try {
-		transform(_ostrm, _dds, "", sendData);
-		if (used_temp_file)
-			temp_file.close();
-	}
-	catch (...) {
-		if (used_temp_file)
-			temp_file.close();
-		throw;
-	}
+    try {
+        transform(_ostrm, _dds, "", sendData);
+        if (used_temp_file) temp_file.close();
+    }
+    catch (...) {
+        if (used_temp_file) temp_file.close();
+        throw;
+    }
 }
-
 
 /**
  * DAP Constructor types are semantically equivalent to a w10n node type so they
  * must be represented as a collection of child nodes and leaves.
  */
-void FoDapJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr, string indent, bool sendData){
-	vector<libdap::BaseType *> leaves;
-	vector<libdap::BaseType *> nodes;
+void FoDapJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr, string indent, bool sendData)
+{
+    vector<libdap::BaseType *> leaves;
+    vector<libdap::BaseType *> nodes;
 
+    // Sort the variables into two sets/
+    libdap::DDS::Vars_iter vi = cnstrctr->var_begin();
+    libdap::DDS::Vars_iter ve = cnstrctr->var_end();
+    for (; vi != ve; vi++) {
+        if ((*vi)->send_p()) {
+            libdap::BaseType *v = *vi;
+            v->is_constructor_type();
+            libdap::Type type = v->type();
+            if (type == libdap::dods_array_c) {
+                type = v->var()->type();
+            }
+            if (v->is_constructor_type() || (v->is_vector_type() && v->var()->is_constructor_type())) {
+                nodes.push_back(v);
+            }
+            else {
+                leaves.push_back(v);
+            }
+        }
+    }
 
-	// Sort the variables into two sets/
-	libdap::DDS::Vars_iter vi = cnstrctr->var_begin();
-	libdap::DDS::Vars_iter ve = cnstrctr->var_end();
-	for (; vi != ve; vi++) {
-		if ((*vi)->send_p()) {
-			libdap::BaseType *v = *vi;
-			v->is_constructor_type();
-			libdap::Type type = v->type();
-			if(type == libdap::dods_array_c){
-				type = v->var()->type();
-			}
-			if(v->is_constructor_type() ||
-					(v->is_vector_type() && v->var()->is_constructor_type())){
-				nodes.push_back(v);
-			}
-			else {
-				leaves.push_back(v);
-			}
-		}
-	}
+    // Declare this node
+    *strm << indent << "{" << endl;
+    string child_indent = indent + _indent_increment;
 
-	// Declare this node
-	*strm << indent << "{" << endl ;
-	string child_indent = indent + _indent_increment;
+    // Write this node's metadata (name & attributes)
+    writeNodeMetadata(strm, cnstrctr, child_indent);
 
-	// Write this node's metadata (name & attributes)
-	writeNodeMetadata(strm, cnstrctr, child_indent);
+    transform_node_worker(strm, leaves, nodes, child_indent, sendData);
 
-	transform_node_worker(strm, leaves,  nodes, child_indent, sendData);
-
-	*strm << indent << "}" << endl;
+    *strm << indent << "}" << endl;
 
 }
 
@@ -405,147 +450,137 @@ void FoDapJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr,
  * This worker method allows us to recursively traverse a "node" variables contents and
  * any child nodes will be traversed as well.
  */
-void FoDapJsonTransform::transform_node_worker(ostream *strm, vector<libdap::BaseType *> leaves, vector<libdap::BaseType *> nodes, string indent, bool sendData){
+void FoDapJsonTransform::transform_node_worker(ostream *strm, vector<libdap::BaseType *> leaves,
+    vector<libdap::BaseType *> nodes, string indent, bool sendData)
+{
 
-	// Write down this nodes leaves
-	*strm << indent << "\"leaves\": [";
-	if(leaves.size() > 0)
-		*strm << endl;
-	for(std::vector<libdap::BaseType *>::size_type l=0; l< leaves.size(); l++){
-		libdap::BaseType *v = leaves[l];
-		BESDEBUG(FoDapJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
-		if( l>0 ){
-			*strm << "," ;
-			*strm << endl ;
-		}
-		transform(strm, v, indent + _indent_increment, sendData);
-	}
-	if(leaves.size()>0)
-		*strm << endl << indent;
-	*strm << "]," << endl;
+    // Write down this nodes leaves
+    *strm << indent << "\"leaves\": [";
+    if (leaves.size() > 0) *strm << endl;
+    for (std::vector<libdap::BaseType *>::size_type l = 0; l < leaves.size(); l++) {
+        libdap::BaseType *v = leaves[l];
+        BESDEBUG(FoDapJsonTransform_debug_key, "Processing LEAF: " << v->name() << endl);
+        if (l > 0) {
+            *strm << ",";
+            *strm << endl;
+        }
+        transform(strm, v, indent + _indent_increment, sendData);
+    }
+    if (leaves.size() > 0) *strm << endl << indent;
+    *strm << "]," << endl;
 
+    // Write down this nodes child nodes
+    *strm << indent << "\"nodes\": [";
+    if (nodes.size() > 0) *strm << endl;
+    for (std::vector<libdap::BaseType *>::size_type n = 0; n < nodes.size(); n++) {
+        libdap::BaseType *v = nodes[n];
+        transform(strm, v, indent + _indent_increment, sendData);
+    }
+    if (nodes.size() > 0) *strm << endl << indent;
 
-	// Write down this nodes child nodes
-	*strm << indent << "\"nodes\": [";
-	if(nodes.size() > 0)
-		*strm << endl;
-	for(std::vector<libdap::BaseType *>::size_type n=0; n< nodes.size(); n++){
-		libdap::BaseType *v = nodes[n];
-		transform(strm, v, indent + _indent_increment, sendData);
-	}
-	if(nodes.size()>0)
-		*strm << endl << indent;
-
-	*strm << "]" << endl;
-
+    *strm << "]" << endl;
 
 }
-
 
 /**
  * Writes a JSON representation of the DDS to the passed stream. Data is sent is the sendData
  * flag is true.
  */
-void FoDapJsonTransform::transform(ostream *strm, libdap::DDS *dds, string indent, bool sendData){
+void FoDapJsonTransform::transform(ostream *strm, libdap::DDS *dds, string indent, bool sendData)
+{
 
+    /**
+     * w10 sees the world in terms of leaves and nodes. Leaves have data, nodes have other nodes and leaves.
+     */
+    vector<libdap::BaseType *> leaves;
+    vector<libdap::BaseType *> nodes;
 
+    libdap::DDS::Vars_iter vi = dds->var_begin();
+    libdap::DDS::Vars_iter ve = dds->var_end();
+    for (; vi != ve; vi++) {
+        if ((*vi)->send_p()) {
+            libdap::BaseType *v = *vi;
+            libdap::Type type = v->type();
+            if (type == libdap::dods_array_c) {
+                type = v->var()->type();
+            }
+            if (v->is_constructor_type() || (v->is_vector_type() && v->var()->is_constructor_type())) {
+                nodes.push_back(v);
+            }
+            else {
+                leaves.push_back(v);
+            }
+        }
+    }
 
-	/**
-	 * w10 sees the world in terms of leaves and nodes. Leaves have data, nodes have other nodes and leaves.
-	 */
-	vector<libdap::BaseType *> leaves;
-	vector<libdap::BaseType *> nodes;
+    // Declare this node
+    *strm << indent << "{" << endl;
+    string child_indent = indent + _indent_increment;
 
-	libdap::DDS::Vars_iter vi = dds->var_begin();
-	libdap::DDS::Vars_iter ve = dds->var_end();
-	for (; vi != ve; vi++) {
-		if ((*vi)->send_p()) {
-			libdap::BaseType *v = *vi;
-			libdap::Type type = v->type();
-			if(type == libdap::dods_array_c){
-				type = v->var()->type();
-			}
-			if(v->is_constructor_type() ||
-					(v->is_vector_type() && v->var()->is_constructor_type())){
-				nodes.push_back(v);
-			}
-			else {
-				leaves.push_back(v);
-			}
-		}
-	}
+    // Write this node's metadata (name & attributes)
+    writeDatasetMetadata(strm, dds, child_indent);
 
-	// Declare this node
-	*strm << indent << "{" << endl ;
-	string child_indent = indent + _indent_increment;
+    transform_node_worker(strm, leaves, nodes, child_indent, sendData);
 
-	// Write this node's metadata (name & attributes)
-	writeDatasetMetadata(strm, dds, child_indent);
-
-	transform_node_worker(strm, leaves,  nodes, child_indent, sendData);
-
-	*strm << indent << "}" << endl;
+    *strm << indent << "}" << endl;
 
 }
-
 
 /**
  * Write the json representation of the passed BAseType instance. If the
  * parameter sendData is true then include the data.
  */
-void FoDapJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string  indent, bool sendData)
+void FoDapJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string indent, bool sendData)
 {
-	switch(bt->type()){
-	// Handle the atomic types - that's easy!
-	case libdap::dods_byte_c:
-	case libdap::dods_int16_c:
-	case libdap::dods_uint16_c:
-	case libdap::dods_int32_c:
-	case libdap::dods_uint32_c:
-	case libdap::dods_float32_c:
-	case libdap::dods_float64_c:
-	case libdap::dods_str_c:
-	case libdap::dods_url_c:
-		transformAtomic(strm, bt, indent, sendData);
-		break;
+    switch (bt->type()) {
+    // Handle the atomic types - that's easy!
+    case libdap::dods_byte_c:
+    case libdap::dods_int16_c:
+    case libdap::dods_uint16_c:
+    case libdap::dods_int32_c:
+    case libdap::dods_uint32_c:
+    case libdap::dods_float32_c:
+    case libdap::dods_float64_c:
+    case libdap::dods_str_c:
+    case libdap::dods_url_c:
+        transformAtomic(strm, bt, indent, sendData);
+        break;
 
-	case libdap::dods_structure_c:
-		transform(strm, (libdap::Structure *) bt, indent, sendData);
-		break;
+    case libdap::dods_structure_c:
+        transform(strm, (libdap::Structure *) bt, indent, sendData);
+        break;
 
-	case libdap::dods_grid_c:
-		transform(strm, (libdap::Grid *) bt, indent, sendData);
-		break;
+    case libdap::dods_grid_c:
+        transform(strm, (libdap::Grid *) bt, indent, sendData);
+        break;
 
-	case libdap::dods_sequence_c:
-		transform(strm, (libdap::Sequence *) bt, indent, sendData);
-		break;
+    case libdap::dods_sequence_c:
+        transform(strm, (libdap::Sequence *) bt, indent, sendData);
+        break;
 
-	case libdap::dods_array_c:
-		transform(strm, (libdap::Array *) bt, indent, sendData);
-		break;
+    case libdap::dods_array_c:
+        transform(strm, (libdap::Array *) bt, indent, sendData);
+        break;
 
-	case libdap::dods_int8_c:
-	case libdap::dods_uint8_c:
-	case libdap::dods_int64_c:
-	case libdap::dods_uint64_c:
-	// case libdap::dods_url4_c:
-	case libdap::dods_enum_c:
-	case libdap::dods_group_c:
-	{
-		string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
+    case libdap::dods_int8_c:
+    case libdap::dods_uint8_c:
+    case libdap::dods_int64_c:
+    case libdap::dods_uint64_c:
+        // case libdap::dods_url4_c:
+    case libdap::dods_enum_c:
+    case libdap::dods_group_c: {
+        string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	default:
-	{
-		string s = (string) "File out JSON, " + "Unrecognized type.";
+    default: {
+        string s = (string) "File out JSON, " + "Unrecognized type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	}
+    }
 
 }
 
@@ -553,255 +588,228 @@ void FoDapJsonTransform::transform(ostream *strm, libdap::BaseType *bt, string  
  * Write the json representation of the passed BaseType instance - which had better be one of the
  * atomic DAP types. If the parameter sendData is true then include the data.
  */
-void FoDapJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, string indent, bool sendData){
+void FoDapJsonTransform::transformAtomic(ostream *strm, libdap::BaseType *b, string indent, bool sendData)
+{
 
-	*strm << indent << "{" << endl;
+    *strm << indent << "{" << endl;
 
-	string childindent = indent + _indent_increment;
+    string childindent = indent + _indent_increment;
 
-	writeLeafMetadata(strm, b, childindent);
+    writeLeafMetadata(strm, b, childindent);
 
-	*strm << childindent << "\"shape\": [1]," << endl;
+    *strm << childindent << "\"shape\": [1]," << endl;
 
-	if(sendData){
-		// Data
-		*strm << childindent << "\"data\": [";
+    if (sendData) {
+        // Data
+        *strm << childindent << "\"data\": [";
 
-		if(b->type() == libdap::dods_str_c || b->type() == libdap::dods_url_c ){
-			libdap::Str *strVar = (libdap::Str *)b;
-			std::string tmpString = strVar->value();
-			*strm << "\"" << fojson::escape_for_json(tmpString) << "\"";
-		}
-		else {
-			b->print_val(*strm, "", false);
-		}
+        if (b->type() == libdap::dods_str_c || b->type() == libdap::dods_url_c) {
+            libdap::Str *strVar = (libdap::Str *) b;
+            std::string tmpString = strVar->value();
+            *strm << "\"" << fojson::escape_for_json(tmpString) << "\"";
+        }
+        else {
+            b->print_val(*strm, "", false);
+        }
 
-		*strm << "]";
-	}
+        *strm << "]";
+    }
 
 }
-
-
 
 /**
  * Write the json representation of the passed DAP Array instance - which had better be one of
  * atomic DAP types. If the parameter sendData is true then include the data.
  */
-void FoDapJsonTransform::transform(ostream *strm, libdap::Array *a, string indent, bool sendData){
+void FoDapJsonTransform::transform(ostream *strm, libdap::Array *a, string indent, bool sendData)
+{
 
-    BESDEBUG(FoDapJsonTransform_debug_key, "FoJsonTransform::transform() - Processing Array. "
-            << " a->type(): " << a->type()
-			<< " a->var()->type(): " << a->var()->type()
-			<< endl);
+    BESDEBUG(FoDapJsonTransform_debug_key,
+        "FoJsonTransform::transform() - Processing Array. " << " a->type(): " << a->type() << " a->var()->type(): " << a->var()->type() << endl);
 
-	switch(a->var()->type()){
-	// Handle the atomic types - that's easy!
-	case libdap::dods_byte_c:
-		json_simple_type_array<libdap::dods_byte>(strm,a,indent,sendData);
-		break;
+    switch (a->var()->type()) {
+    // Handle the atomic types - that's easy!
+    case libdap::dods_byte_c:
+        json_simple_type_array<libdap::dods_byte>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_int16_c:
-		json_simple_type_array<libdap::dods_int16>(strm,a,indent,sendData);
-		break;
+    case libdap::dods_int16_c:
+        json_simple_type_array<libdap::dods_int16>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_uint16_c:
-		json_simple_type_array<libdap::dods_uint16>(strm,a,indent,sendData);
-		break;
+    case libdap::dods_uint16_c:
+        json_simple_type_array<libdap::dods_uint16>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_int32_c:
-		json_simple_type_array<libdap::dods_int32>(strm,a,indent,sendData);
-		break;
+    case libdap::dods_int32_c:
+        json_simple_type_array<libdap::dods_int32>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_uint32_c:
-		json_simple_type_array<libdap::dods_uint32>(strm,a,indent,sendData);
-		break;
+    case libdap::dods_uint32_c:
+        json_simple_type_array<libdap::dods_uint32>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_float32_c:
-		json_simple_type_array<libdap::dods_float32>(strm,a,indent,sendData);
-    	break;
+    case libdap::dods_float32_c:
+        json_simple_type_array<libdap::dods_float32>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_float64_c:
-		json_simple_type_array<libdap::dods_float64>(strm,a,indent,sendData);
-		break;
+    case libdap::dods_float64_c:
+        json_simple_type_array<libdap::dods_float64>(strm, a, indent, sendData);
+        break;
 
-	case libdap::dods_str_c:
-	{
-		json_string_array(strm,a,indent,sendData);
+    case libdap::dods_str_c: {
+        json_string_array(strm, a, indent, sendData);
 
 #if 0
-		string s = (string) "File out JSON, " + "Arrays of String objects not a supported return type.";
+        string s = (string) "File out JSON, " + "Arrays of String objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 #endif
-		break;
-	}
+        break;
+    }
 
-	case libdap::dods_url_c:
-	{
-		json_string_array(strm,a,indent,sendData);
+    case libdap::dods_url_c: {
+        json_string_array(strm, a, indent, sendData);
 
 #if 0
-		string s = (string) "File out JSON, " + "Arrays of URL objects not a supported return type.";
+        string s = (string) "File out JSON, " + "Arrays of URL objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
 #endif
 
-		break;
-	}
+        break;
+    }
 
-	case libdap::dods_structure_c:
-	{
-		string s = (string) "File out JSON, " + "Arrays of Structure objects not a supported return type.";
+    case libdap::dods_structure_c: {
+        string s = (string) "File out JSON, " + "Arrays of Structure objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
-	case libdap::dods_grid_c:
-	{
-		string s = (string) "File out JSON, " + "Arrays of Grid objects not a supported return type.";
+        break;
+    }
+    case libdap::dods_grid_c: {
+        string s = (string) "File out JSON, " + "Arrays of Grid objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	case libdap::dods_sequence_c:
-	{
-		string s = (string) "File out JSON, " + "Arrays of Sequence objects not a supported return type.";
+    case libdap::dods_sequence_c: {
+        string s = (string) "File out JSON, " + "Arrays of Sequence objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	case libdap::dods_array_c:
-	{
-		string s = (string) "File out JSON, " + "Arrays of Array objects not a supported return type.";
+    case libdap::dods_array_c: {
+        string s = (string) "File out JSON, " + "Arrays of Array objects not a supported return type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
-	case libdap::dods_int8_c:
-	case libdap::dods_uint8_c:
-	case libdap::dods_int64_c:
-	case libdap::dods_uint64_c:
-	// case libdap::dods_url4_c:
-	case libdap::dods_enum_c:
-	case libdap::dods_group_c:
-	{
-		string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
+        break;
+    }
+    case libdap::dods_int8_c:
+    case libdap::dods_uint8_c:
+    case libdap::dods_int64_c:
+    case libdap::dods_uint64_c:
+        // case libdap::dods_url4_c:
+    case libdap::dods_enum_c:
+    case libdap::dods_group_c: {
+        string s = (string) "File out JSON, " + "DAP4 types not yet supported.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	default:
-	{
-		string s = (string) "File out JSON, " + "Unrecognized type.";
+    default: {
+        string s = (string) "File out JSON, " + "Unrecognized type.";
         throw BESInternalError(s, __FILE__, __LINE__);
-		break;
-	}
+        break;
+    }
 
-	}
+    }
 
 }
-
 
 /**
  * Write the json representation of the passed DAP AttrTable instance.
  * Supports multi-valued attributes and nested attributes.
  */
-void FoDapJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table, string  indent){
+void FoDapJsonTransform::transform(ostream *strm, libdap::AttrTable &attr_table, string indent)
+{
 
-	string child_indent = indent + _indent_increment;
+    string child_indent = indent + _indent_increment;
 
-	// Start the attributes block
-	*strm << indent << "\"attributes\": [";
-
+    // Start the attributes block
+    *strm << indent << "\"attributes\": [";
 
 //	if(attr_table.get_name().length()>0)
 //		*strm  << endl << child_indent << "{\"name\": \"name\", \"value\": \"" << attr_table.get_name() << "\"},";
 
+// Only do more if there are actually attributes in the table
+    if (attr_table.get_size() != 0) {
+        *strm << endl;
+        libdap::AttrTable::Attr_iter begin = attr_table.attr_begin();
+        libdap::AttrTable::Attr_iter end = attr_table.attr_end();
 
-	// Only do more if there are actually attributes in the table
-	if(attr_table.get_size() != 0) {
-		*strm << endl;
-		libdap::AttrTable::Attr_iter begin = attr_table.attr_begin();
-		libdap::AttrTable::Attr_iter end = attr_table.attr_end();
+        for (libdap::AttrTable::Attr_iter at_iter = begin; at_iter != end; at_iter++) {
 
+            switch (attr_table.get_attr_type(at_iter)) {
+            case libdap::Attr_container: {
+                libdap::AttrTable *atbl = attr_table.get_attr_table(at_iter);
 
-		for(libdap::AttrTable::Attr_iter at_iter=begin; at_iter !=end; at_iter++){
+                // not first thing? better use a comma...
+                if (at_iter != begin) *strm << "," << endl;
 
-			switch (attr_table.get_attr_type(at_iter)){
-				case libdap::Attr_container:
-				{
-					libdap::AttrTable *atbl = attr_table.get_attr_table(at_iter);
+                // Attribute Containers need to be opened and then a recursive call gets made
+                *strm << child_indent << "{" << endl;
 
-					// not first thing? better use a comma...
-					if(at_iter != begin )
-						*strm << "," << endl;
+                // If the table has a name, write it out as a json property.
+                if (atbl->get_name().length() > 0)
+                    *strm << child_indent + _indent_increment << "\"name\": \"" << atbl->get_name() << "\"," << endl;
 
-					// Attribute Containers need to be opened and then a recursive call gets made
-					*strm << child_indent << "{" << endl;
+                // Recursive call for child attribute table.
+                transform(strm, *atbl, child_indent + _indent_increment);
+                *strm << endl << child_indent << "}";
 
-					// If the table has a name, write it out as a json property.
-					if(atbl->get_name().length()>0)
-						*strm << child_indent + _indent_increment << "\"name\": \"" << atbl->get_name() << "\"," << endl;
+                break;
 
+            }
+            default: {
+                // not first thing? better use a comma...
+                if (at_iter != begin) *strm << "," << endl;
 
-					// Recursive call for child attribute table.
-					transform(strm, *atbl, child_indent + _indent_increment);
-					*strm << endl << child_indent << "}";
+                // Open attribute object, write name
+                *strm << child_indent << "{\"name\": \"" << attr_table.get_name(at_iter) << "\", ";
 
-					break;
+                // Open value array
+                *strm << "\"value\": [";
+                vector<std::string> *values = attr_table.get_attr_vector(at_iter);
+                // write values
+                for (std::vector<std::string>::size_type i = 0; i < values->size(); i++) {
 
-				}
-				default:
-				{
-					// not first thing? better use a comma...
-					if(at_iter != begin)
-						*strm << "," << endl;
+                    // not first thing? better use a comma...
+                    if (i > 0) *strm << ",";
 
-					// Open attribute object, write name
-					*strm << child_indent << "{\"name\": \""<< attr_table.get_name(at_iter) << "\", ";
+                    // Escape the double quotes found in String and URL type attribute values.
+                    if (attr_table.get_attr_type(at_iter) == libdap::Attr_string
+                        || attr_table.get_attr_type(at_iter) == libdap::Attr_url) {
+                        *strm << "\"";
+                        // string value = (*values)[i] ;
+                        *strm << fojson::escape_for_json((*values)[i]);
+                        *strm << "\"";
+                    }
+                    else {
 
-					// Open value array
-					*strm  << "\"value\": [";
-					vector<std::string> *values = attr_table.get_attr_vector(at_iter);
-					// write values
-					for(std::vector<std::string>::size_type i=0; i<values->size() ;i++){
+                        *strm << (*values)[i];
+                    }
 
-						// not first thing? better use a comma...
-						if(i>0)
-							*strm << ",";
+                }
+                // close value array
+                *strm << "]}";
+                break;
+            }
 
-						// Escape the double quotes found in String and URL type attribute values.
-						if(attr_table.get_attr_type(at_iter) == libdap::Attr_string || attr_table.get_attr_type(at_iter) == libdap::Attr_url){
-							*strm << "\"";
-							// string value = (*values)[i] ;
-							*strm << fojson::escape_for_json((*values)[i]) ;
-							*strm << "\"";
-						}
-						else {
+            }
+        }
+        *strm << endl << indent;
 
-							*strm << (*values)[i] ;
-						}
+    }
 
-					}
-					// close value array
-					*strm << "]}";
-					break;
-				}
+    // close AttrTable JSON
 
-			}
-		}
-		*strm << endl << indent;
-
-	}
-
-	// close AttrTable JSON
-
-	*strm << "]";
-
-
+    *strm << "]";
 
 }
-
-
-
-
-
-
-
 

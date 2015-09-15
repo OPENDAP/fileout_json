@@ -28,6 +28,8 @@
 
 #include "config.h"
 
+#include <cassert>
+
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -56,6 +58,8 @@ using namespace std;
 #define JSON_ORIGINAL_NAME "json_original_name"
 
 #define FoInstanceJsonTransform_debug_key "fojson"
+const int int_64_precision = 15; // See also in FODapJsonTransform.cc. jhrg 9/14/15
+
 
 /**
  * Writes out the values of an n-dimensional array. Uses recursion.
@@ -108,12 +112,31 @@ template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::o
 
         vector<T> src(length);
         a->value(&src[0]);
-        unsigned int indx = json_simple_type_array_worker(strm, src, 0, shape, 0);
+
+        unsigned int indx = 0;
+
+        if (typeid(T) == typeid(libdap::dods_float64)) {
+            streamsize prec = strm->precision(int_64_precision);
+            try {
+                indx = json_simple_type_array_worker(strm, src, 0, shape, 0);
+                strm->precision(prec);
+            }
+            catch(...) {
+                strm->precision(prec);
+                throw;
+            }
+        }
+        else {
+            indx = json_simple_type_array_worker(strm, src, 0, shape, 0);
+        }
 
         // make this an assert?
+        assert(length == indx);
+#if 0
         if (length != indx)
             BESDEBUG(FoInstanceJsonTransform_debug_key,
                     "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+#endif
     }
     else { // otherwise send metadata
         *strm << "{" << endl;
