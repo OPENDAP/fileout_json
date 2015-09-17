@@ -170,10 +170,6 @@ template<typename T> void FoDapJsonTransform::json_simple_type_array(ostream *st
         // Data
         *strm << childindent << "\"data\": ";
         unsigned int indx = 0;
-#if 0
-        T *src = new T[length]; //vector FIXME
-        a->value(src);
-#endif
         vector<T> src(length);
         a->value(&src[0]);
 
@@ -196,15 +192,8 @@ template<typename T> void FoDapJsonTransform::json_simple_type_array(ostream *st
         else {
             indx = json_simple_type_array_worker(strm, &src[0], 0, &shape, 0);
         }
-#if 0
-        delete src;
-#endif
+
         assert(length == indx);
-#if 0
-        if (length != indx)
-            BESDEBUG(FoDapJsonTransform_debug_key,
-                "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
-#endif
     }
 
     *strm << endl << indent << "}";
@@ -419,7 +408,10 @@ void FoDapJsonTransform::transform(ostream *strm, libdap::Constructor *cnstrctr,
     for (; vi != ve; vi++) {
         if ((*vi)->send_p()) {
             libdap::BaseType *v = *vi;
+#if 0
+            // ??? jhrg 9/16/15
             v->is_constructor_type();
+#endif
             libdap::Type type = v->type();
             if (type == libdap::dods_array_c) {
                 type = v->var()->type();
