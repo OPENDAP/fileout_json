@@ -1,3 +1,37 @@
+2015-09-17  James Gallagher  <jgallagher@opendap.org>
+
+	Fixes for issues found by Coverity
+
+2015-09-15  James Gallagher  <jgallagher@opendap.org>
+
+	Modified because a fix in libdap broke this code
+	libdap was setting the output stream precision and not
+	resetting it. Whne I fixed that, this code had to be updated.
+
+2015-09-11  James Gallagher  <jgallagher@opendap.org>
+
+	Modified Makefile.am to support distcheck
+
+2015-08-04  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed package.m4 in the autoconf dirs Makefile.am files
+
+2015-05-12  James Gallagher  <jgallagher@opendap.org>
+
+	Halfway to removing the tests' need for the netcdf handler.
+	The dapreader handler still does not process Grids correctly...
+
+	Repaired getopt() use. Patch from O. Poplawski.
+
+2015-04-09  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/fileout_json
+
+	Modified Makefile.am to support bes distcheck
+
+2015-04-06  James Gallagher  <jgallagher@opendap.org>
+
+	Version 1.0.0
 2015-03-31  James Gallagher  <jgallagher@opendap.org>
 
 	Fixed a problem with make check
