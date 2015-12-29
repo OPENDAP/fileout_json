@@ -47,6 +47,7 @@
 #include <ConstraintEvaluator.h>
 
 #include <BESInternalError.h>
+#include <BESDapError.h>
 #include <TheBESKeys.h>
 #include <BESContextManager.h>
 #include <BESDataDDSResponse.h>
@@ -135,7 +136,7 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
         eval.parse_constraint(ce, *dds);
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (...) {
         throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
@@ -164,7 +165,10 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
         }
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
+    catch (BESError &e) {
+        throw;
     }
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
@@ -174,6 +178,9 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
         FoDapJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( true /* send data too */ );
+    }
+    catch (Error &e) {
+        throw BESDapError("Failed to transform to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (BESError &e) {
         throw;
@@ -224,7 +231,7 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
         eval.parse_constraint(ce, *dds);
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (...) {
         throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
@@ -252,9 +259,12 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
         }
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
-    catch (...) {
+    catch (BESError &e) {
+        throw;
+    }
+   catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
 
@@ -264,6 +274,12 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
         ft.transform( false /* send metadata only */ );
 
         // FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
+    }
+    catch (Error &e) {
+        throw BESDapError("Failed to transform to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
+    catch (BESError &e) {
+        throw;
     }
     catch (...) {
         throw BESInternalError("FoDapJsonTransmitter: Failed to transform to JSON, unknown error", __FILE__, __LINE__);

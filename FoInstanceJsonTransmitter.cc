@@ -48,6 +48,7 @@
 #include <ConstraintEvaluator.h>
 
 #include <BESInternalError.h>
+#include <BESDapError.h>
 #include <TheBESKeys.h>
 #include <BESContextManager.h>
 #include <BESDataDDSResponse.h>
@@ -141,7 +142,7 @@ void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHan
         eval.parse_constraint(ce, *dds);
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (...) {
         throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
@@ -171,7 +172,10 @@ void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHan
         }
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
+    catch (BESError &e) {
+        throw;
     }
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
@@ -181,6 +185,9 @@ void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHan
         FoInstanceJsonTransform ft(dds, dhi, &o_strm);
 
         ft.transform( false /* do not send data */ );
+    }
+    catch (Error &e) {
+        throw BESDapError("Failed to transform data to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (BESError &e) {
         throw;
@@ -232,7 +239,7 @@ void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandler
         eval.parse_constraint(ce, *dds);
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to parse the constraint expression: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
     }
     catch (...) {
         throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
@@ -263,28 +270,15 @@ void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandler
         }
     }
     catch (Error &e) {
-        throw BESInternalError("Failed to read data: " + e.get_error_message(), __FILE__, __LINE__);
+        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
+    catch (BESError &e) {
+        throw;
     }
     catch (...) {
         throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
     }
-#if 0
-    string temp_file_name = FoJsonTransmitter::temp_dir + '/' + "jsonXXXXXX";
-    vector<char> temp_full(temp_file_name.length() + 1);
-    string::size_type len = temp_file_name.copy(&temp_full[0], temp_file_name.length());
-    temp_full[len] = '\0';
 
-    // cover the case where older versions of mkstemp() create the file using
-    // a mode of 666.
-    mode_t original_mode = umask(077);
-    int fd = mkstemp(&temp_full[0]);
-    umask(original_mode);
-    if (fd == -1)
-        throw BESInternalError("Failed to open the temporary file: " + temp_file_name, __FILE__, __LINE__);
-
-    // transform the OPeNDAP DataDDS to the netcdf file
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - transforming into temporary file " << &temp_full[0] << endl);
-#endif
     try {
         FoInstanceJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
 
@@ -292,18 +286,13 @@ void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandler
 
         // FoJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
     }
-#if 0
+    catch (Error &e) {
+        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
     catch (BESError &e) {
-        close(fd);
-        (void) unlink(&temp_full[0]);
         throw;
     }
-#endif
     catch (...) {
-#if 0
-    	close(fd);
-        (void) unlink(&temp_full[0]);
-#endif
     	throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
     }
 
