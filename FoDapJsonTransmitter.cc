@@ -276,16 +276,6 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
         }
         else {
             // Since we are only sending metadata there is no reason to intern the data values.
-#if 0
-            // Iterate through the variables in the DataDDS and read
-            // in the data if the variable has the send flag set.
-            for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
-                if ((*i)->send_p()) {
-                    (*i)->intern_data(eval, *dds);
-                }
-            }
-#endif
-
         }
     }
     catch (Error &e) {
