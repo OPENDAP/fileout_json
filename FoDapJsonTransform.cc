@@ -484,17 +484,6 @@ void FoDapJsonTransform::transform(ostream *strm, libdap::DDS *dds, string inden
 {
 
 
-    // This next step utilizes a well known function, promote_function_output_structures()
-    // to look for one or more top level Structures whose name indicates (by way of ending
-    // with "_uwrap") that their contents should be promoted (aka moved) to the top level.
-    // This is in support of a hack around the current API where server side functions
-    // may only return a single DAP object and not a collection of objects. The name suffix
-    // "_unwrap" is used as a signal from the function to the the various response
-    // builders and transmitters that the representation needs to be altered before
-    // transmission, and that in fact is what happens in our friend
-    // promote_function_output_structures()
-    _dds = promote_function_output_structures(_dds);
-
 
     /**
      * w10 sees the world in terms of leaves and nodes. Leaves have data, nodes have other nodes and leaves.

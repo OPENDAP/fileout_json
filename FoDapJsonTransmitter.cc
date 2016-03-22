@@ -55,6 +55,7 @@
 #include <BESDapNames.h>
 #include <BESDataNames.h>
 #include <BESDebug.h>
+#include <DapFunctionUtils.h>
 
 #include "FoDapJsonTransmitter.h"
 #include "FoDapJsonTransform.h"
@@ -150,9 +151,21 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
         if (eval.function_clauses()) {
             BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
             DataDDS *tmp_dds = eval.eval_function_clauses(*dds);
-            bdds->set_dds(tmp_dds);
             delete dds;
             dds = tmp_dds;
+            bdds->set_dds(dds);
+
+            // This next step utilizes a well known function, promote_function_output_structures()
+            // to look for one or more top level Structures whose name indicates (by way of ending
+            // with "_uwrap") that their contents should be promoted (aka moved) to the top level.
+            // This is in support of a hack around the current API where server side functions
+            // may only return a single DAP object and not a collection of objects. The name suffix
+            // "_unwrap" is used as a signal from the function to the the various response
+            // builders and transmitters that the representation needs to be altered before
+            // transmission, and that in fact is what happens in our friend
+            // promote_function_output_structures()
+            promote_function_output_structures(dds);
+
         }
         else {
             // Iterate through the variables in the DataDDS and read
@@ -238,17 +251,32 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
     }
 
     // now we need to read the data
-    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata() - reading data into DataDDS" << endl);
 
     try {
         // Handle *functional* constraint expressions specially
         if (eval.function_clauses()) {
-            BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
+            BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata() Processing functional constraint clause(s)." << endl);
             DDS *tmp_dds = eval.eval_function_clauses(*dds);
             delete dds;
             dds = tmp_dds;
+            bdds->set_dds(dds);
+
+            // This next step utilizes a well known function, promote_function_output_structures()
+            // to look for one or more top level Structures whose name indicates (by way of ending
+            // with "_uwrap") that their contents should be promoted (aka moved) to the top level.
+            // This is in support of a hack around the current API where server side functions
+            // may only return a single DAP object and not a collection of objects. The name suffix
+            // "_unwrap" is used as a signal from the function to the the various response
+            // builders and transmitters that the representation needs to be altered before
+            // transmission, and that in fact is what happens in our friend
+            // promote_function_output_structures()
+            promote_function_output_structures(dds);
+
         }
         else {
+            // Since we are only sending metadata there is no reason to intern the data values.
+#if 0
             // Iterate through the variables in the DataDDS and read
             // in the data if the variable has the send flag set.
             for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
@@ -256,6 +284,8 @@ void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerI
                     (*i)->intern_data(eval, *dds);
                 }
             }
+#endif
+
         }
     }
     catch (Error &e) {

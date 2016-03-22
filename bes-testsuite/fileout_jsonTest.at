@@ -39,3 +39,6 @@ AT_BESCMD_RESPONSE_TEST([coads_climatology_abstract_object_DATA.bescmd])
 AT_BESCMD_RESPONSE_TEST([coads_climatology_instance_object_METADATA.bescmd])
 AT_BESCMD_RESPONSE_TEST([coads_climatology_instance_object_DATA.bescmd])
 
+
+AT_BESCMD_RESPONSE_TEST([function_result_unwrap.bescmd])
+
