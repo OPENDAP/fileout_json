@@ -43,11 +43,11 @@
  * @param name The name of the request handler being added to the list
  * of request handlers
  */
-FoJsonRequestHandler::FoJsonRequestHandler( const string &name )
-    : BESRequestHandler( name )
+FoJsonRequestHandler::FoJsonRequestHandler(const string &name) :
+    BESRequestHandler(name)
 {
-    add_handler( HELP_RESPONSE, FoJsonRequestHandler::build_help ) ;
-    add_handler( VERS_RESPONSE, FoJsonRequestHandler::build_version ) ;
+    add_handler( HELP_RESPONSE, FoJsonRequestHandler::build_help);
+    add_handler( VERS_RESPONSE, FoJsonRequestHandler::build_version);
 }
 
 /** @brief Any cleanup that needs to take place
@@ -67,32 +67,26 @@ FoJsonRequestHandler::~FoJsonRequestHandler()
  * @throws BESInternalError if the response object is not an
  * informational response object.
  */
-bool
-FoJsonRequestHandler::build_help( BESDataHandlerInterface &dhi )
+bool FoJsonRequestHandler::build_help(BESDataHandlerInterface &dhi)
 {
-    BESResponseObject *response = dhi.response_handler->get_response_object() ;
-    BESInfo *info = dynamic_cast < BESInfo * >(response) ;
-    if( !info )
-	throw BESInternalError( "cast error", __FILE__, __LINE__ ) ;
+    BESResponseObject *response = dhi.response_handler->get_response_object();
+    BESInfo *info = dynamic_cast<BESInfo *>(response);
+    if (!info) throw BESInternalError("cast error", __FILE__, __LINE__);
 
-    bool found = false ;
-    string key = "FoJson.Reference" ;
-    string ref ;
-    TheBESKeys::TheKeys()->get_value( key, ref, found ) ;
-    if( ref.empty() )
-	ref = "http://docs.opendap.org/index.php/BES_-_Modules_-_FileOut_JSON" ;
-    map<string,string> attrs ;
-    attrs["name"] = MODULE_NAME ;
-    attrs["version"] = MODULE_VERSION ;
-#if 0
-    attrs["name"] = PACKAGE_NAME;
-    attrs["version"] = PACKAGE_VERSION;
-#endif
-    attrs["reference"] = ref ;
-    info->begin_tag( "module", &attrs ) ;
-    info->end_tag( "module" ) ;
+    bool found = false;
+    string key = "FoJson.Reference";
+    string ref;
+    TheBESKeys::TheKeys()->get_value(key, ref, found);
+    if (ref.empty()) ref = "http://docs.opendap.org/index.php/BES_-_Modules_-_FileOut_JSON";
+    map<string, string> attrs;
+    attrs["name"] = MODULE_NAME;
+    attrs["version"] = MODULE_VERSION;
 
-    return true ;
+    attrs["reference"] = ref;
+    info->begin_tag("module", &attrs);
+    info->end_tag("module");
+
+    return true;
 }
 
 /** @brief add version information to a version response
@@ -102,20 +96,15 @@ FoJsonRequestHandler::build_help( BESDataHandlerInterface &dhi )
  * @param dhi The data interface containing information for the current
  * request to the BES
  */
-bool
-FoJsonRequestHandler::build_version( BESDataHandlerInterface &dhi )
+bool FoJsonRequestHandler::build_version(BESDataHandlerInterface &dhi)
 {
-    BESResponseObject *response = dhi.response_handler->get_response_object() ;
-    BESVersionInfo *info = dynamic_cast < BESVersionInfo * >(response) ;
-    if( !info )
-	throw BESInternalError( "cast error", __FILE__, __LINE__ ) ;
+    BESResponseObject *response = dhi.response_handler->get_response_object();
+    BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(response);
+    if (!info) throw BESInternalError("cast error", __FILE__, __LINE__);
 
-#if 0
-    info->add_module(PACKAGE_NAME, PACKAGE_VERSION);
-#endif
     info->add_module(MODULE_NAME, MODULE_VERSION);
 
-    return true ;
+    return true;
 }
 
 /** @brief dumps information about this object
@@ -124,13 +113,11 @@ FoJsonRequestHandler::build_version( BESDataHandlerInterface &dhi )
  *
  * @param strm C++ i/o stream to dump the information to
  */
-void
-FoJsonRequestHandler::dump( ostream &strm ) const
+void FoJsonRequestHandler::dump(ostream &strm) const
 {
-    strm << BESIndent::LMarg << "FoJsonRequestHandler::dump - ("
-			     << (void *)this << ")" << endl ;
-    BESIndent::Indent() ;
-    BESRequestHandler::dump( strm ) ;
-    BESIndent::UnIndent() ;
+    strm << BESIndent::LMarg << "FoJsonRequestHandler::dump - (" << (void *) this << ")" << endl;
+    BESIndent::Indent();
+    BESRequestHandler::dump(strm);
+    BESIndent::UnIndent();
 }
 

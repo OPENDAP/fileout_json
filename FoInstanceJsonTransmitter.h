@@ -29,14 +29,10 @@
 #ifndef A_FoInstanceJsonTransmitter_h
 #define A_FoInstanceJsonTransmitter_h 1
 
-#include <DataDDS.h>
-#include <ConstraintEvaluator.h>
-
 #include <BESBasicTransmitter.h>
 
-class BESContainer;
-
-using namespace libdap;
+class BESResponseObject;
+class BESDataHandlerInterface;
 
 /** @brief BESTransmitter class named "json" that transmits an OPeNDAP
  * data object as a JSON file
@@ -51,15 +47,12 @@ class FoInstanceJsonTransmitter: public BESBasicTransmitter {
 private:
 	static string temp_dir;
 
-	static void return_temp_stream(const string &filename, ostream &strm);
-
 public:
 	FoInstanceJsonTransmitter();
 	virtual ~FoInstanceJsonTransmitter() { }
 
 	static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
 	static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-	// static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
 #endif // A_FoInstanceJsonTransmitter_h

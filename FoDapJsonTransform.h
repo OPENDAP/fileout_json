@@ -33,14 +33,15 @@
 #include <vector>
 #include <map>
 
-
-#include <BaseType.h>
-#include <DDS.h>
-#include <Array.h>
-
-
 #include <BESObj.h>
-#include <BESDataHandlerInterface.h>
+
+namespace libdap {
+class BaseType;
+class DDS;
+class Array;
+}
+
+class BESDataHandlerInterface;
 
 /**
  * Used to transform a DDS into a w10n JSON metadata or w10n JSON data document.
@@ -49,32 +50,28 @@
  */
 class FoDapJsonTransform: public BESObj {
 private:
-	libdap::DDS *_dds;
-	std::string _localfile;
-	std::string _returnAs;
-	std::string _indent_increment;
+    libdap::DDS *_dds;
+    std::string _returnAs;
+    std::string _indent_increment;
 
-	std::ostream *_ostrm;
+    void writeNodeMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
+    void writeLeafMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
+    void writeDatasetMetadata(std::ostream *strm, libdap::DDS *dds, std::string indent);
 
-	void writeNodeMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
-	void writeLeafMetadata(std::ostream *strm, libdap::BaseType *bt, std::string indent);
-	void writeDatasetMetadata(std::ostream *strm, libdap::DDS *dds, std::string indent);
+    void transformAtomic(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
 
-	void transformAtomic(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
-
-
-	void transform(std::ostream *strm, libdap::DDS *dds, std::string indent, bool sendData);
-	void transform(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
+    void transform(std::ostream *strm, libdap::DDS *dds, std::string indent, bool sendData);
+    void transform(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
 
     //void transform(std::ostream *strm, Structure *s,string indent );
     //void transform(std::ostream *strm, Grid *g, string indent);
     //void transform(std::ostream *strm, Sequence *s, string indent);
-	void transform(std::ostream *strm, libdap::Constructor *cnstrctr, std::string indent, bool sendData);
-	void transform_node_worker(std::ostream *strm, std::vector<libdap::BaseType *> leaves, std::vector<libdap::BaseType *> nodes, std::string indent, bool sendData);
-
+    void transform(std::ostream *strm, libdap::Constructor *cnstrctr, std::string indent, bool sendData);
+    void transform_node_worker(std::ostream *strm, std::vector<libdap::BaseType *> leaves,
+        std::vector<libdap::BaseType *> nodes, std::string indent, bool sendData);
 
     void transform(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
-    void transform(std::ostream *strm, libdap::AttrTable &attr_table, std::string  indent);
+    void transform(std::ostream *strm, libdap::AttrTable &attr_table, std::string indent);
 
     template<typename T>
     void json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
@@ -82,26 +79,16 @@ private:
     void json_string_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
 
     template<typename T>
-    unsigned  int json_simple_type_array_worker(
-    		std::ostream *strm,
-    		T *values,
-    		unsigned int indx,
-    		std::vector<unsigned int> *shape,
-    		unsigned int currentDim
-    		);
-
-
-
+    unsigned int json_simple_type_array_worker(std::ostream *strm, T *values, unsigned int indx,
+        std::vector<unsigned int> *shape, unsigned int currentDim);
 public:
+    FoDapJsonTransform(libdap::DDS *dds);
 
-    FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
-    FoDapJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
-	virtual ~FoDapJsonTransform();
+    virtual ~FoDapJsonTransform() { }
 
-	virtual void transform(bool sendData);
+    virtual void transform(std::ostream &ostrm, bool sendData);
 
-	virtual void dump(std::ostream &strm) const;
-
+    virtual void dump(std::ostream &strm) const;
 };
 
 #endif /* FODAPJSONTRANSFORM_H_ */

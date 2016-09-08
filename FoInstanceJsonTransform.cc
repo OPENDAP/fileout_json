@@ -60,12 +60,12 @@ using namespace std;
 #define FoInstanceJsonTransform_debug_key "fojson"
 const int int_64_precision = 15; // See also in FODapJsonTransform.cc. jhrg 9/14/15
 
-
 /**
  * Writes out the values of an n-dimensional array. Uses recursion.
  */
-template<typename T> unsigned int FoInstanceJsonTransform::json_simple_type_array_worker(std::ostream *strm, const std::vector<T> &values,
-        unsigned int indx, const std::vector<unsigned int> &shape, unsigned int currentDim)
+template<typename T>
+unsigned int FoInstanceJsonTransform::json_simple_type_array_worker(std::ostream *strm,
+    const std::vector<T> &values, unsigned int indx, const std::vector<unsigned int> &shape, unsigned int currentDim)
 {
     *strm << "[";
 
@@ -74,8 +74,7 @@ template<typename T> unsigned int FoInstanceJsonTransform::json_simple_type_arra
     for (unsigned int i = 0; i < currentDimSize; i++) {
         if (currentDim < shape.size() - 1) {
             BESDEBUG(FoInstanceJsonTransform_debug_key,
-                    "json_simple_type_array_worker() - Recursing! indx:  " << indx << " currentDim: " << currentDim
-                    << " currentDimSize: " << currentDimSize << endl);
+                "json_simple_type_array_worker() - Recursing! indx:  " << indx << " currentDim: " << currentDim << " currentDimSize: " << currentDimSize << endl);
 
             indx = json_simple_type_array_worker<T>(strm, values, indx, shape, currentDim + 1);
             if (i + 1 != currentDimSize) *strm << ", ";
@@ -99,12 +98,11 @@ template<typename T> unsigned int FoInstanceJsonTransform::json_simple_type_arra
  * @param indent A string containing the indent level.
  * @param sendData A boolean value that when evaluated as true will cause the data values to be sent and not the metadata.
  */
-template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent,
-        bool sendData)
+template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::ostream *strm, libdap::Array *a,
+    std::string indent, bool sendData)
 {
-	std::string name = a->name();
+    std::string name = a->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) + "\":  ";
-
 
     if (sendData) { // send data
         std::vector<unsigned int> shape(a->dimensions(true));
@@ -121,7 +119,7 @@ template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::o
                 indx = json_simple_type_array_worker(strm, src, 0, shape, 0);
                 strm->precision(prec);
             }
-            catch(...) {
+            catch (...) {
                 strm->precision(prec);
                 throw;
             }
@@ -134,8 +132,8 @@ template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::o
         assert(length == indx);
 #if 0
         if (length != indx)
-            BESDEBUG(FoInstanceJsonTransform_debug_key,
-                    "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
+        BESDEBUG(FoInstanceJsonTransform_debug_key,
+            "json_simple_type_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
 #endif
     }
     else { // otherwise send metadata
@@ -157,7 +155,7 @@ template<typename T> void FoInstanceJsonTransform::json_simple_type_array(std::o
  */
 void FoInstanceJsonTransform::json_string_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData)
 {
-	std::string name = a->name();
+    std::string name = a->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) + "\":  ";
 
     if (sendData) { // send data
@@ -172,8 +170,8 @@ void FoInstanceJsonTransform::json_string_array(std::ostream *strm, libdap::Arra
 
         // make this an assert?
         if (length != indx)
-            BESDEBUG(FoInstanceJsonTransform_debug_key, "json_string_array() - indx NOT equal to content length! indx:  "
-                    << indx << "  length: " << length << endl);
+            BESDEBUG(FoInstanceJsonTransform_debug_key,
+                "json_string_array() - indx NOT equal to content length! indx:  " << indx << "  length: " << length << endl);
     }
     else { // otherwise send metadata
         *strm << "{" << endl;
@@ -197,8 +195,10 @@ void FoInstanceJsonTransform::json_string_array(std::ostream *strm, libdap::Arra
  * @throws BESInternalError if dds provided is empty or not read, if the
  * file is not specified or failed to create the netcdf file
  */
-FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, const string &localfile) :
-        _dds(dds), _localfile(localfile), _indent_increment(" "), _ostrm(0)
+#if 0
+FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/,
+    const string &localfile) :
+    _dds(dds), _localfile(localfile), _indent_increment(" "), _ostrm(0)
 {
     // I'd make these asserts - ctors generally shoulf not throw exceptions if it can be helped
     // jhrg 3/11/5
@@ -206,7 +206,7 @@ FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandle
     if (_localfile.empty())
         throw BESInternalError("File out JSON, empty local file name passed to constructor", __FILE__, __LINE__);
 }
-
+#endif
 /** @brief Constructor that creates transformation object from the specified
  * DataDDS object to the specified stream.
  *
@@ -218,19 +218,9 @@ FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandle
  * @param dhi
  * @param ostrm
  */
-FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &/*dhi*/, std::ostream *ostrm) :
-        _dds(dds), _localfile(""), _indent_increment(" "), _ostrm(ostrm)
+FoInstanceJsonTransform::FoInstanceJsonTransform(libdap::DDS *dds):  _dds(dds), _indent_increment(" ")
 {
-    // assert
     if (!_dds) throw BESInternalError("File out JSON, null DDS passed to constructor", __FILE__, __LINE__);
-}
-
-/** @brief Destructor
- *
- * Cleans up any temporary data created during the transformation
- */
-FoInstanceJsonTransform::~FoInstanceJsonTransform()
-{
 }
 
 /** @brief dumps information about this transformation object for debugging
@@ -246,7 +236,6 @@ void FoInstanceJsonTransform::dump(std::ostream &strm) const
 {
     strm << BESIndent::LMarg << "FoInstanceJsonTransform::dump - (" << (void *) this << ")" << endl;
     BESIndent::Indent();
-    strm << BESIndent::LMarg << "temporary file = " << _localfile << endl;
     if (_dds != 0) {
         _dds->print(strm);
     }
@@ -265,29 +254,9 @@ void FoInstanceJsonTransform::dump(std::ostream &strm) const
  * @param sendData If the sendData parameter is true data will be
  * sent. If sendData is false then the metadata will be sent.
  */
-void FoInstanceJsonTransform::transform(bool sendData)
+void FoInstanceJsonTransform::transform(ostream &ostrm, bool sendData)
 {
-    // used to ensure the _ostrm is closed only when it's a temp file
-    bool used_temp_file = false;
-    fstream temp_file;
-
-    // We could factor out the ostream* parameters from all of the methods
-    // if we wanted... jhrg 7/31/14
-    if (!_ostrm) {
-        temp_file.open(_localfile.c_str(), std::fstream::out);
-        if (!temp_file) throw BESInternalError("Could not open temp file: " + _localfile, __FILE__, __LINE__);
-        _ostrm = &temp_file;
-        used_temp_file = true;
-    }
-
-    try {
-        transform(_ostrm, _dds, "", sendData);
-        if (used_temp_file) temp_file.close();
-    }
-    catch (...) {
-        if (used_temp_file) temp_file.close();
-        throw;
-    }
+    transform(&ostrm, _dds, "", sendData);
 }
 
 /** @brief Transforms the DDS object into a JSON instance object representation.
@@ -302,7 +271,6 @@ void FoInstanceJsonTransform::transform(bool sendData)
  */
 void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, string indent, bool sendData)
 {
-
     bool sentSomething = false;
 
     // Open returned JSON object
@@ -340,13 +308,11 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::DDS *dds, st
 
                 sentSomething = true;
             }
-
         }
     }
 
     // Close the JSON object
     *strm << endl << "}" << endl;
-
 }
 
 /** @brief Transforms the BaseType object into a JSON instance object representation.
@@ -425,7 +391,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::BaseType *bt
  */
 void FoInstanceJsonTransform::transformAtomic(std::ostream *strm, libdap::BaseType *b, string indent, bool sendData)
 {
-	std::string name = b->name();
+    std::string name = b->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) << "\": ";
 
     if (sendData) {
@@ -458,7 +424,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Structure *b
 {
 
     // Open object with name of the structure
-	std::string name = b->name();
+    std::string name = b->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) << "\": {" << endl;
 
     // Process the variables.
@@ -472,7 +438,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Structure *b
             if ((*vi)->send_p()) {
                 libdap::BaseType *v = *vi;
                 BESDEBUG(FoInstanceJsonTransform_debug_key,
-                        "FoInstanceJsonTransform::transform() - Processing structure variable: " << v->name() << endl);
+                    "FoInstanceJsonTransform::transform() - Processing structure variable: " << v->name() << endl);
                 transform(strm, v, indent + _indent_increment, sendData);
                 if ((vi + 1) != ve) {
                     *strm << ",";
@@ -497,11 +463,11 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Grid *g, str
 {
 
     // Open JSON property object with name of the grid
-	std::string name = g->name();
+    std::string name = g->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) << "\": {" << endl;
 
     BESDEBUG(FoInstanceJsonTransform_debug_key,
-            "FoInstanceJsonTransform::transform() - Processing Grid data Array: " << g->get_array()->name() << endl);
+        "FoInstanceJsonTransform::transform() - Processing Grid data Array: " << g->get_array()->name() << endl);
 
     // Process the data array
     transform(strm, g->get_array(), indent + _indent_increment, sendData);
@@ -510,7 +476,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Grid *g, str
     // Process the MAP arrays
     for (libdap::Grid::Map_iter mapi = g->map_begin(); mapi < g->map_end(); mapi++) {
         BESDEBUG(FoInstanceJsonTransform_debug_key,
-                "FoInstanceJsonTransform::transform() - Processing Grid Map Array: " << (*mapi)->name() << endl);
+            "FoInstanceJsonTransform::transform() - Processing Grid Map Array: " << (*mapi)->name() << endl);
         if (mapi != g->map_begin()) {
             *strm << "," << endl;
         }
@@ -534,7 +500,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Sequence *s,
 {
 
     // Open JSON property object with name of the sequence
-	std::string name = s->name();
+    std::string name = s->name();
     *strm << indent << "\"" << fojson::escape_for_json(name) << "\": {" << endl;
 
     string child_indent = indent + _indent_increment;
@@ -551,8 +517,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Sequence *s,
 
     *strm << child_indent << "\"columnNames\": [";
     for (libdap::Constructor::Vars_iter v = s->var_begin(); v < s->var_end(); v++) {
-        if (v != s->var_begin())
-        	*strm << ",";
+        if (v != s->var_begin()) *strm << ",";
         std::string name = (*v)->name();
         *strm << "\"" << fojson::escape_for_json(name) << "\"";
     }
@@ -596,7 +561,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Array *a, st
 {
 
     BESDEBUG(FoInstanceJsonTransform_debug_key,
-            "FoInstanceJsonTransform::transform() - Processing Array. " << " a->type(): " << a->type() << " a->var()->type(): " << a->var()->type() << endl);
+        "FoInstanceJsonTransform::transform() - Processing Array. " << " a->type(): " << a->type() << " a->var()->type(): " << a->var()->type() << endl);
 
     switch (a->var()->type()) {
     // Handle the atomic types - that's easy!
@@ -693,10 +658,10 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Array *a, st
     }
 
     }
-
 }
 
-/** @brief Transforms the AttrTable object into a JSON instance object representation.
+/**
+ * @brief Transforms the AttrTable object into a JSON instance object representation.
  *
  * Transforms the AttrTable into a JSON document using an instance object representation.
  * Since Attributes get promoted to "properties" of their parent container (either a
@@ -710,7 +675,6 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::Array *a, st
  */
 void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::AttrTable &attr_table, string indent)
 {
-
     /*
      * Since Attributes get promoted to JSON "properties" of their parent object (either a
      * BaseType variable or a DDS derived JSON object) this method does not open a new JSON
@@ -753,7 +717,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::AttrTable &a
                 if (at_iter != begin) *strm << "," << endl;
 
                 // Name of property
-                std::string name  = attr_table.get_name(at_iter);
+                std::string name = attr_table.get_name(at_iter);
                 *strm << child_indent << "\"" << fojson::escape_for_json(name) << "\": ";
 
                 // Open values array
@@ -763,7 +727,7 @@ void FoInstanceJsonTransform::transform(std::ostream *strm, libdap::AttrTable &a
                 for (std::vector<std::string>::size_type i = 0; i < values->size(); i++) {
                     if (i > 0) *strm << ",";
                     if (attr_table.get_attr_type(at_iter) == libdap::Attr_string
-                            || attr_table.get_attr_type(at_iter) == libdap::Attr_url) {
+                        || attr_table.get_attr_type(at_iter) == libdap::Attr_url) {
                         *strm << "\"";
 
                         string value = (*values)[i];

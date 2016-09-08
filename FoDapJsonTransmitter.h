@@ -26,19 +26,13 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
 #ifndef A_FoDapJsonTransmitter_h
 #define A_FoDapJsonTransmitter_h 1
 
-#include <DataDDS.h>
-#include <ConstraintEvaluator.h>
-
 #include <BESBasicTransmitter.h>
 
-class BESContainer;
-
-using namespace libdap;
-
+class BESResponseObject;
+class BESDataHandlerInterface;
 
 /** @brief BESTransmitter class named "json" that transmits an OPeNDAP
  * data object as a JSON file
@@ -51,7 +45,6 @@ using namespace libdap;
  */
 class FoDapJsonTransmitter: public BESBasicTransmitter {
 private:
-    static void return_temp_stream(const string &filename, ostream &strm);
     static string temp_dir;
 
 public:
@@ -60,7 +53,6 @@ public:
 
     static void send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi);
     static void send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi);
-    //static void send_json(DDS *dds, ConstraintEvaluator &eval, BESDataHandlerInterface &dhi, bool sendData);
 };
 
 #endif // A_FoDapJsonTransmitter_h

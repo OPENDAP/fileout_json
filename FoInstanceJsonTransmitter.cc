@@ -26,7 +26,6 @@
 // Please read the full copyright statement in the file COPYRIGHT_URI.
 //
 
-
 #include "config.h"
 
 #include <stdio.h>
@@ -55,16 +54,15 @@
 #include <BESDDSResponse.h>
 #include <BESDapNames.h>
 #include <BESDataNames.h>
+#include <BESDapResponseBuilder.h>
 #include <BESDebug.h>
 
 #include "FoInstanceJsonTransmitter.h"
 #include "FoInstanceJsonTransform.h"
 
-
-using namespace ::libdap;
+using namespace libdap;
 
 #define FO_JSON_TEMP_DIR "/tmp"
-
 
 string FoInstanceJsonTransmitter::temp_dir;
 
@@ -78,11 +76,10 @@ string FoInstanceJsonTransmitter::temp_dir;
  * FoJson.Tempdir. If this variable is not found or is not set then it
  * defaults to the macro definition FO_JSON_TEMP_DIR.
  */
-FoInstanceJsonTransmitter::FoInstanceJsonTransmitter() :
-		BESBasicTransmitter()
+FoInstanceJsonTransmitter::FoInstanceJsonTransmitter() : BESBasicTransmitter()
 {
     add_method(DATA_SERVICE, FoInstanceJsonTransmitter::send_data);
-    add_method(DDX_SERVICE,  FoInstanceJsonTransmitter::send_metadata);
+    add_method(DDX_SERVICE, FoInstanceJsonTransmitter::send_metadata);
 
     if (FoInstanceJsonTransmitter::temp_dir.empty()) {
         // Where is the temp directory for creating these files
@@ -90,11 +87,11 @@ FoInstanceJsonTransmitter::FoInstanceJsonTransmitter() :
         string key = "FoJson.Tempdir";
         TheBESKeys::TheKeys()->get_value(key, FoInstanceJsonTransmitter::temp_dir, found);
         if (!found || FoInstanceJsonTransmitter::temp_dir.empty()) {
-        	FoInstanceJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
+            FoInstanceJsonTransmitter::temp_dir = FO_JSON_TEMP_DIR;
         }
         string::size_type len = FoInstanceJsonTransmitter::temp_dir.length();
         if (FoInstanceJsonTransmitter::temp_dir[len - 1] == '/') {
-        	FoInstanceJsonTransmitter::temp_dir = FoInstanceJsonTransmitter::temp_dir.substr(0, len - 1);
+            FoInstanceJsonTransmitter::temp_dir = FoInstanceJsonTransmitter::temp_dir.substr(0, len - 1);
         }
     }
 }
@@ -120,85 +117,35 @@ FoInstanceJsonTransmitter::FoInstanceJsonTransmitter() :
  */
 void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
-    BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
-    if (!bdds) {
-        throw BESInternalError("Cast to BESDDSResponse error.", __FILE__, __LINE__);
-    }
-
-    DDS *dds = bdds->get_dds();
-    if (!dds)
-        throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
-
-    BESDEBUG("fojson", "FoJsonTransmitter::send_metadata - parsing the constraint" << endl);
-
-    ConstraintEvaluator &eval = bdds->get_ce();
-    ostream &o_strm = dhi.get_output_stream();
-    if (!o_strm)
-        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
-
-    // ticket 1248 jhrg 2/23/09
-    string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
-    try {
-        eval.parse_constraint(ce, *dds);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (...) {
-        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    // now we need to read the data
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoJsonTransmitter::send_data - BEGIN transmitting JSON" << endl);
 
     try {
-        // Handle *functional* constraint expressions specially
-        if (eval.function_clauses()) {
-            BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
-            DDS *tmp_dds = eval.eval_function_clauses(*dds);
-            bdds->set_dds(tmp_dds);
-            delete dds;
-            dds = tmp_dds;
-        }
-        else {
-            // Iterate through the variables in the DataDDS and read
-            // in the data if the variable has the send flag set.
+        BESDapResponseBuilder responseBuilder;
 
-            for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
-                if ((*i)->send_p()) {
-                    (*i)->intern_data(eval, *dds);
-                }
-            }
-        }
+        // processed_dds managed by response builder
+        DDS *processed_dds = responseBuilder.process_dap2_dds(obj, dhi);
+
+        ostream &o_strm = dhi.get_output_stream();
+        if (!o_strm)
+            throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
+
+        FoInstanceJsonTransform ft(processed_dds);
+
+        ft.transform(o_strm, false /* do not send data */);
     }
     catch (Error &e) {
-        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+        throw BESDapError("Failed to transform data to JSON: " + e.get_error_message(), false, e.get_error_code(),
+            __FILE__, __LINE__);
     }
     catch (BESError &e) {
         throw;
     }
     catch (...) {
-        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    try {
-        FoInstanceJsonTransform ft(dds, dhi, &o_strm);
-
-        ft.transform( false /* do not send data */ );
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to transform data to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (BESError &e) {
-        throw;
-    }
-    catch (...) {
-        throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+        throw BESInternalError("Failed to transform to JSON: Unknown exception caught", __FILE__, __LINE__);
     }
 
     BESDEBUG("fojson", "FoJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
-
 
 /** @brief The static method registered to transmit OPeNDAP data objects as
  * a JSON file.
@@ -217,57 +164,26 @@ void FoInstanceJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHan
  */
 void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
-    BESDataDDSResponse *bdds = dynamic_cast<BESDataDDSResponse *>(obj);
-    if (!bdds)
-        throw BESInternalError("cast error", __FILE__, __LINE__);
-
-    DDS *dds = bdds->get_dds();
-    if (!dds)
-        throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
-
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - parsing the constraint" << endl);
-
-    ConstraintEvaluator &eval = bdds->get_ce();
-
-    ostream &o_strm = dhi.get_output_stream();
-    if (!o_strm)
-        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
-
-    // ticket 1248 jhrg 2/23/09
-    string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
-    try {
-        eval.parse_constraint(ce, *dds);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (...) {
-        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    // now we need to read the data
-    BESDEBUG("fojson", "FoJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoJsonTransmitter::send_data - BEGIN transmitting JSON" << endl);
 
     try {
-        // Handle *functional* constraint expressions specially
-        if (eval.function_clauses()) {
-            BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
-            DDS *tmp_dds = eval.eval_function_clauses(*dds);
-            bdds->set_dds(tmp_dds);
-            delete dds;
-            dds = tmp_dds;
-        }
-        else {
-            // Iterate through the variables in the DataDDS and read
-            // in the data if the variable has the send flag set.
+        BESDapResponseBuilder responseBuilder;
 
-            for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
-                if ((*i)->send_p()) {
-                    (*i)->intern_data(eval, *dds);
-                }
+        BESDEBUG("fojson", "FoJsonTransmitter::send_data - Reading data into DataDDS" << endl);
 
-            }
-        }
+        // Use the DDS from the ResponseObject along with the parameters
+        // from the DataHandlerInterface to load the DDS with values.
+        // Note that the BESResponseObject will manage the loaded_dds object's
+        // memory. Make this a shared_ptr<>. jhrg 9/6/16
+        DDS *loaded_dds = responseBuilder.intern_dap2_data(obj, dhi);
+
+        ostream &o_strm = dhi.get_output_stream();
+        if (!o_strm)
+            throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
+
+        FoInstanceJsonTransform ft(loaded_dds);
+
+        ft.transform(o_strm, true /* send data */);
     }
     catch (Error &e) {
         throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
@@ -275,73 +191,12 @@ void FoInstanceJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandler
     catch (BESError &e) {
         throw;
     }
-    catch (...) {
-        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    try {
-        FoInstanceJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
-
-        ft.transform( true /* send data */ );
-
-        // FoJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (BESError &e) {
-        throw;
+    catch (std::exception &e) {
+        throw BESInternalError("Failed to read data: STL Error: " + string(e.what()), __FILE__, __LINE__);
     }
     catch (...) {
-    	throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+        throw BESInternalError("Failed to get read data: Unknown exception caught", __FILE__, __LINE__);
     }
-
-    //close(fd);
-    //(void) unlink(&temp_full[0]);
 
     BESDEBUG("fojson", "FoJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
-
-/** @brief stream the temporary file back to the requester
- *
- * Streams the temporary file specified by filename to the specified
- * C++ ostream
- *
- * @param filename The name of the file to stream back to the requester
- * @param strm C++ ostream to write the contents of the file to
- * @throws BESInternalError if problem opening the file
- */
-void FoInstanceJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
-{
-    ifstream os;
-    os.open(filename.c_str(), ios::binary | ios::in);
-    if (!os) {
-        string err = "Can not connect to file " + filename;
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
-    int nbytes;
-    char block[4096];
-
-    os.read(block, sizeof block);
-    nbytes = os.gcount();
-    if (nbytes > 0) {
-        strm.write(block, nbytes);
-    }
-    else {
-        // close the stream before we leave.
-        os.close();
-
-        string err = (string) "0XAAE234F: failed to stream. Internal server "
-                + "error, got zero count on stream buffer." + filename;
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
-    while (os) {
-        os.read(block, sizeof block);
-        nbytes = os.gcount();
-        strm.write(block, nbytes);
-    }
-    os.close();
-}
-

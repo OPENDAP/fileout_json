@@ -33,11 +33,16 @@
 #include <vector>
 #include <map>
 
-#include <DDS.h>
-#include <Array.h>
-
 #include <BESObj.h>
-#include <BESDataHandlerInterface.h>
+
+namespace libdap {
+class BaseType;
+class DDS;
+class Array;
+}
+
+class BESDataHandlerInterface;
+
 
 /**
  * @brief Transforms a DDS into JSON document on disk.
@@ -46,26 +51,21 @@
  * The output is written to a local file whose name is passed as a parameter
  * to the constructor.
  */
-class FoInstanceJsonTransform: public BESObj
-{
+class FoInstanceJsonTransform: public BESObj {
 private:
     libdap::DDS *_dds;
-    std::string _localfile;
+    // std::string _localfile;
     std::string _returnAs;
     std::string _indent_increment;
 
-    std::ostream *_ostrm;
+    // std::ostream *_ostrm;
 
-    template<typename T> unsigned int json_simple_type_array_worker(std::ostream *strm, const std::vector<T> &values, unsigned int indx,
-            const std::vector<unsigned int> &shape, unsigned int currentDim);
+    template<typename T> unsigned int json_simple_type_array_worker(std::ostream *strm, const std::vector<T> &values,
+        unsigned int indx, const std::vector<unsigned int> &shape, unsigned int currentDim);
 
-    template<typename T> void json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
+    template<typename T> void json_simple_type_array(std::ostream *strm, libdap::Array *a, std::string indent,
+        bool sendData);
     void json_string_array(std::ostream *strm, libdap::Array *a, std::string indent, bool sendData);
-
-#if 0
-    unsigned int json_simple_type_array_worker_string(std::ostream *strm, const vector<std::string> &values,
-            unsigned int indx, std::vector<unsigned int> *shape, unsigned int currentDim);
-#endif
 
     void transformAtomic(std::ostream *strm, libdap::BaseType *bt, std::string indent, bool sendData);
 
@@ -78,12 +78,12 @@ private:
     void transform(std::ostream *strm, libdap::AttrTable &attr_table, std::string indent);
 
 public:
-    FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
-    FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, std::ostream *ostrm);
+    //FoInstanceJsonTransform(libdap::DDS *dds, BESDataHandlerInterface &dhi, const std::string &localfile);
+    FoInstanceJsonTransform(libdap::DDS *dds/*, BESDataHandlerInterface &dhi, std::ostream *ostrm*/);
 
-    virtual ~FoInstanceJsonTransform();
+    virtual ~FoInstanceJsonTransform() { }
 
-    virtual void transform(bool sendData);
+    virtual void transform(std::ostream &ostrm, bool sendData);
 
     virtual void dump(std::ostream &strm) const;
 };

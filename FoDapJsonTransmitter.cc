@@ -54,12 +54,12 @@
 #include <BESDDSResponse.h>
 #include <BESDapNames.h>
 #include <BESDataNames.h>
+#include <BESDapResponseBuilder.h>
 #include <BESDebug.h>
 #include <DapFunctionUtils.h>
 
 #include "FoDapJsonTransmitter.h"
 #include "FoDapJsonTransform.h"
-
 
 using namespace ::libdap;
 
@@ -115,67 +115,27 @@ FoDapJsonTransmitter::FoDapJsonTransmitter() : BESBasicTransmitter()
  */
 void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
-    BESDataDDSResponse *bdds = dynamic_cast<BESDataDDSResponse *>(obj);
-    if (!bdds)
-        throw BESInternalError("cast error", __FILE__, __LINE__);
-
-    DDS *dds = bdds->get_dds();
-    if (!dds)
-        throw BESInternalError("No DataDDS has been created for transmit", __FILE__, __LINE__);
-
-    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - parsing the constraint" << endl);
-
-    ConstraintEvaluator &eval = bdds->get_ce();
-
-    ostream &o_strm = dhi.get_output_stream();
-    if (!o_strm)
-        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
-
-    // ticket 1248 jhrg 2/23/09
-    string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
-    try {
-        eval.parse_constraint(ce, *dds);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (...) {
-        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    // now we need to read the data
-    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - BEGIN" << endl);
 
     try {
-        // Handle *functional* constraint expressions specially
-        if (eval.function_clauses()) {
-            BESDEBUG("fojson", "processing a functional constraint clause(s)." << endl);
-            DDS *tmp_dds = eval.eval_function_clauses(*dds);
-            delete dds;
-            dds = tmp_dds;
-            bdds->set_dds(dds);
+        BESDapResponseBuilder responseBuilder;
 
-            // This next step utilizes a well known function, promote_function_output_structures()
-            // to look for one or more top level Structures whose name indicates (by way of ending
-            // with "_uwrap") that their contents should be promoted (aka moved) to the top level.
-            // This is in support of a hack around the current API where server side functions
-            // may only return a single DAP object and not a collection of objects. The name suffix
-            // "_unwrap" is used as a signal from the function to the the various response
-            // builders and transmitters that the representation needs to be altered before
-            // transmission, and that in fact is what happens in our friend
-            // promote_function_output_structures()
-            promote_function_output_structures(dds);
+        BESDEBUG("fojson", "FoJsonTransmitter::send_data - Reading data into DataDDS" << endl);
 
-        }
-        else {
-            // Iterate through the variables in the DataDDS and read
-            // in the data if the variable has the send flag set.
-            for (DDS::Vars_iter i = dds->var_begin(); i != dds->var_end(); i++) {
-                if ((*i)->send_p()) {
-                    (*i)->intern_data(eval, *dds);
-                }
-            }
-        }
+        // The response object will manage loaded_dds
+        // Use the DDS from the ResponseObject along with the parameters
+        // from the DataHandlerInterface to load the DDS with values.
+        // Note that the BESResponseObject will manage the loaded_dds object's
+        // memory. Make this a shared_ptr<>. jhrg 9/6/16
+        DDS *loaded_dds = responseBuilder.intern_dap2_data(obj, dhi);
+
+        ostream &o_strm = dhi.get_output_stream();
+        if (!o_strm)
+            throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
+
+        FoDapJsonTransform ft(loaded_dds);
+
+        ft.transform(o_strm, true /* send data */);
     }
     catch (Error &e) {
         throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
@@ -183,23 +143,11 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
     catch (BESError &e) {
         throw;
     }
-    catch (...) {
-        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    try {
-        FoDapJsonTransform ft(dds, dhi, &o_strm);
-
-        ft.transform( true /* send data too */ );
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to transform to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (BESError &e) {
-        throw;
+    catch (std::exception &e) {
+        throw BESInternalError("Failed to read data: STL Error: " + string(e.what()), __FILE__, __LINE__);
     }
     catch (...) {
-        throw BESInternalError("fileout_json: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+        throw BESInternalError("Failed to get read data: Unknown exception caught", __FILE__, __LINE__);
     }
 
     BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - done transmitting JSON" << endl);
@@ -222,136 +170,32 @@ void FoDapJsonTransmitter::send_data(BESResponseObject *obj, BESDataHandlerInter
  */
 void FoDapJsonTransmitter::send_metadata(BESResponseObject *obj, BESDataHandlerInterface &dhi)
 {
-    BESDDSResponse *bdds = dynamic_cast<BESDDSResponse *>(obj);
-    if (!bdds)
-        throw BESInternalError("cast error", __FILE__, __LINE__);
-
-    DDS *dds = bdds->get_dds();
-    if (!dds)
-        throw BESInternalError("No DDS has been created for transmit", __FILE__, __LINE__);
-
-    BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata - parsing the constraint" << endl);
-
-    ConstraintEvaluator &eval = bdds->get_ce();
-
-    ostream &o_strm = dhi.get_output_stream();
-    if (!o_strm)
-        throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
-
-    // ticket 1248 jhrg 2/23/09
-    string ce = www2id(dhi.data[POST_CONSTRAINT], "%", "%20%26");
-    try {
-        eval.parse_constraint(ce, *dds);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to parse the constraint expression: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (...) {
-        throw BESInternalError("Failed to parse the constraint expression: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    // now we need to read the data
-    BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata() - reading data into DataDDS" << endl);
+    BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - BEGIN transmitting JSON" << endl);
 
     try {
-        // Handle *functional* constraint expressions specially
-        if (eval.function_clauses()) {
-            BESDEBUG("fojson", "FoDapJsonTransmitter::send_metadata() Processing functional constraint clause(s)." << endl);
-            DDS *tmp_dds = eval.eval_function_clauses(*dds);
-            delete dds;
-            dds = tmp_dds;
-            bdds->set_dds(dds);
+        BESDapResponseBuilder responseBuilder;
 
-            // This next step utilizes a well known function, promote_function_output_structures()
-            // to look for one or more top level Structures whose name indicates (by way of ending
-            // with "_uwrap") that their contents should be promoted (aka moved) to the top level.
-            // This is in support of a hack around the current API where server side functions
-            // may only return a single DAP object and not a collection of objects. The name suffix
-            // "_unwrap" is used as a signal from the function to the the various response
-            // builders and transmitters that the representation needs to be altered before
-            // transmission, and that in fact is what happens in our friend
-            // promote_function_output_structures()
-            promote_function_output_structures(dds);
+        // processed_dds managed by response builder
+        DDS *processed_dds = responseBuilder.process_dap2_dds(obj, dhi);
 
-        }
-        else {
-            // Since we are only sending metadata there is no reason to intern the data values.
-        }
+        ostream &o_strm = dhi.get_output_stream();
+        if (!o_strm)
+            throw BESInternalError("Output stream is not set, can not return as JSON", __FILE__, __LINE__);
+
+        FoDapJsonTransform ft(processed_dds);
+
+        ft.transform(o_strm, false /* do not send data */);
     }
     catch (Error &e) {
-        throw BESDapError("Failed to read data: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
-    }
-    catch (BESError &e) {
-        throw;
-    }
-   catch (...) {
-        throw BESInternalError("Failed to read data: Unknown exception caught", __FILE__, __LINE__);
-    }
-
-    try {
-        FoDapJsonTransform ft(dds, dhi, &o_strm /*&temp_full[0]*/);
-
-        ft.transform( false /* send metadata only */ );
-
-        // FoW10nJsonTransmitter::return_temp_stream(&temp_full[0], o_strm);
-    }
-    catch (Error &e) {
-        throw BESDapError("Failed to transform to JSON: " + e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+        throw BESDapError("Failed to transform data to JSON: " + e.get_error_message(), false, e.get_error_code(),
+            __FILE__, __LINE__);
     }
     catch (BESError &e) {
         throw;
     }
     catch (...) {
-        throw BESInternalError("FoDapJsonTransmitter: Failed to transform to JSON, unknown error", __FILE__, __LINE__);
+        throw BESInternalError("Failed to transform to JSON: Unknown exception caught", __FILE__, __LINE__);
     }
 
     BESDEBUG("fojson", "FoDapJsonTransmitter::send_data - done transmitting JSON" << endl);
 }
-
-/** @brief stream the temporary netcdf file back to the requester
- *
- * Streams the temporary netcdf file specified by filename to the specified
- * C++ ostream
- *
- * @param filename The name of the file to stream back to the requester
- * @param strm C++ ostream to write the contents of the file to
- * @throws BESInternalError if problem opening the file
- */
-void FoDapJsonTransmitter::return_temp_stream(const string &filename, ostream &strm)
-{
-    //  int bytes = 0 ;    // Not used; jhrg 3/16/11
-    ifstream os;
-    os.open(filename.c_str(), ios::binary | ios::in);
-    if (!os) {
-        string err = "Can not connect to file " + filename;
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
-    int nbytes;
-    char block[4096];
-
-    os.read(block, sizeof block);
-    nbytes = os.gcount();
-    if (nbytes > 0) {
-        strm.write(block, nbytes);
-        //bytes += nbytes ;
-    }
-    else {
-        // close the stream before we leave.
-        os.close();
-
-        string err = (string) "0XAAE234F: failed to stream. Internal server "
-                + "error, got zero count on stream buffer." + filename;
-        BESInternalError pe(err, __FILE__, __LINE__);
-        throw pe;
-    }
-    while (os) {
-        os.read(block, sizeof block);
-        nbytes = os.gcount();
-        strm.write(block, nbytes);
-        //write( fileno( stdout ),(void*)block, nbytes ) ;
-        //bytes += nbytes ;
-    }
-    os.close();
-}
-
