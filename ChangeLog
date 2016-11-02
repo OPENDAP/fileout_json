@@ -1,3 +1,20 @@
+2016-09-08  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed hyrax 242 - responses with function calls in the CE
+	I also refactored other aspects of the *Transform and *Transmitter
+	classes so they are more compact and easier to use.
+
+2016-09-06  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'master' into response_cache
+
+2016-06-01  James Gallagher  <jgallagher@opendap.org>
+
+	Hyrax 1.13.1
+
+2016-05-11  Nathan Potter  <ndp@opendap.org>
+
+	Dropped use of DataDDS in fvor of the DDS class.
 2016-03-22  Nathan Potter  <ndp@opendap.org>
 
 	Cleaning up code for merge.
