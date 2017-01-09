@@ -1,3 +1,6 @@
+2016-11-02  James Gallagher  <jgallagher@opendap.org>
+
+	Hyrax 1.13.2
 2016-09-08  James Gallagher  <jgallagher@opendap.org>
 
 	Fixed hyrax 242 - responses with function calls in the CE
